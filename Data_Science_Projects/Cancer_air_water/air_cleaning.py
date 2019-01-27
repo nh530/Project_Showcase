@@ -145,7 +145,7 @@ def main():
             '="{}"'.format)
     clean_no_outlier['FIPS County'] = clean_no_outlier['FIPS County'].apply(
             '="{}"'.format)
-    clean_no_outlier.to_csv('cleanPollutionData.csv', index=False)
+    clean_no_outlier.to_csv('cleanAirData.csv', index=False)
     
 main()
 
