@@ -36,13 +36,18 @@ def simple_oversampling(DataFrame, dependent_variable):
 
 
 def smotenc_oversampling(DataFrame, y, cat):
+    '''
+    Make sure drop dependent variable column or else it would be considered
+    a categorical variable.  
+    '''
     dataset = DataFrame.copy()
+    cat_list = get_indicator_columns(dataset)
     se = SMOTENC(
-        categorical_features=cat, k_neighbors=6, n_jobs=10, sampling_strategy="minority"
+        categorical_features=cat_list, k_neighbors=6, n_jobs=10, sampling_strategy="minority"
     )
     resampled_x, resampled_y = se.fit_resample(dataset, y)
     return resampled_x, resampled_y
-
+    
 
 def get_indicator_columns(DataFrame):
     dataset = DataFrame.copy()

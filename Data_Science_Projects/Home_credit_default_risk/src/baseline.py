@@ -70,12 +70,12 @@ def main():
     
     data.drop("TARGET", axis=1, inplace=True)
     data = preprocessing.categorical_to_dummy(data)
-    cat_list = preprocessing.get_indicator_columns(data)
-    final_x, final_y = preprocessing.smotenc_oversampling(data, y, cat_list)
+    final_x, final_y = preprocessing.smotenc_oversampling(data, y)
     gbm = boosting_model(params, final_x, final_y)
     boosting_cross_validation(params, final_x, final_y)
 #    feature_importance(gbm)
     gbm.save_model("../output/gradient_boosting_model.txt")
+
 
 if __name__ == "__main__":
     main()
