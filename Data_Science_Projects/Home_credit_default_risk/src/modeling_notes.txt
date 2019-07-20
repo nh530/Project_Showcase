@@ -1,0 +1,54 @@
+Current parameters:
+ {'learning_rate': 0.2, 'objective': 'binary', 'num_leaves': 500, 'metric': 'auc', 'feature_fraction': 0.3, 'num_boost_round': 2000}
+Best num_boost_round: 73
+Best CV score: 0.6793711165484766
+
+Current parameters:
+ {'learning_rate': 0.2, 'objective': 'binary', 'num_leaves': 300, 'metric': 'auc', 'feature_fraction': 0.3, 'num_boost_round': 2000}
+Best num_boost_round: 74
+Best CV score: 0.6738095437785776
+
+Current parameters:
+ {'learning_rate': 0.2, 'objective': 'binary', 'num_leaves': 200, 'metric': 'auc', 'feature_fraction': 0.3, 'num_boost_round': 2000}
+Best num_boost_round: 72
+Best CV score: 0.6751424000855583
+
+Current parameters:
+ {'learning_rate': 20, 'objective': 'binary', 'num_leaves': 200, 'metric': 'auc', 'feature_fraction': 0.3, 'num_boost_round': 2000}
+Best num_boost_round: 1
+Best CV score: 0.5781157542088641
+
+Current parameters:
+ {'learning_rate': 0.1, 'objective': 'binary', 'num_leaves': 500, 'metric': 'auc', 'feature_fraction': 0.3, 'num_boost_round': 2000}
+Best num_boost_round: 51
+Best CV score: 0.6933343266411286
+
+Current parameters:
+ {'learning_rate': 0.001, 'objective': 'binary', 'num_leaves': 500, 'metric': 'auc', 'feature_fraction': 0.3, 'num_boost_round': 2000}
+Best num_boost_round: 982
+Best CV score: 0.712304242729969
+
+Current parameters:
+ {'learning_rate': 0.001, 'objective': 'binary', 'num_leaves': 200, 'metric': 'auc', 'feature_fraction': 0.3, 'num_boost_round': 2000}
+Best num_boost_round: 753
+Best CV score: 0.7107937807366506
+
+
+CV AUC score after over sampling of miniority class:
+	(k nearest neighbors = 2)
+	Current parameters:
+	 {'learning_rate': 0.001, 'objective': 'binary', 'num_leaves': 200, 'metric': 'auc', 'feature_fraction': 0.3, 'num_boost_round': 2000}
+	Best num_boost_round: 2000
+	Best CV score: 0.9906849335520821
+
+	(k nearest neighbors = 10)
+	Current parameters:
+	 {'learning_rate': 0.001, 'objective': 'binary', 'num_leaves': 200, 'metric': 'auc', 'feature_fraction': 0.3, 'num_boost_round': 2000}
+	Best num_boost_round: 419
+	Best CV score: 0.9869387802311256
+
+	(knn = 6)
+	Current parameters:
+	 {'learning_rate': 0.001, 'objective': 'binary', 'num_leaves': 200, 'metric': 'auc', 'feature_fraction': 0.3, 'num_boost_round': 2000}
+	Best num_boost_round: 1992
+	Best CV score: 0.9908726162974023

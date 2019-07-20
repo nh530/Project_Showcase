@@ -1,0 +1,576 @@
+DataFrame Shape:
+(# rows, # columns) = (307511, 122)
+
+
+Dataframe Shape After Dropping Every row with nan:
+(8602, 122)
+       # Can't drop all rows with Na's
+
+Classification Dependent Variable Distribution:
+0    282686
+1     24825
+       # class imbalance problem
+
+Columns With Missing Values:
+                              # Missing  Percent Missing
+COMMONAREA_MEDI                  214865        69.872297
+COMMONAREA_AVG                   214865        69.872297
+COMMONAREA_MODE                  214865        69.872297
+NONLIVINGAPARTMENTS_AVG          213514        69.432963
+NONLIVINGAPARTMENTS_MODE         213514        69.432963
+NONLIVINGAPARTMENTS_MEDI         213514        69.432963
+FONDKAPREMONT_MODE               210295        68.386172
+LIVINGAPARTMENTS_AVG             210199        68.354953
+LIVINGAPARTMENTS_MEDI            210199        68.354953
+LIVINGAPARTMENTS_MODE            210199        68.354953
+FLOORSMIN_AVG                    208642        67.848630
+FLOORSMIN_MEDI                   208642        67.848630
+FLOORSMIN_MODE                   208642        67.848630
+YEARS_BUILD_AVG                  204488        66.497784
+YEARS_BUILD_MEDI                 204488        66.497784
+YEARS_BUILD_MODE                 204488        66.497784
+OWN_CAR_AGE                      202929        65.990810
+LANDAREA_AVG                     182590        59.376738
+LANDAREA_MEDI                    182590        59.376738
+LANDAREA_MODE                    182590        59.376738
+BASEMENTAREA_MODE                179943        58.515956
+BASEMENTAREA_AVG                 179943        58.515956
+BASEMENTAREA_MEDI                179943        58.515956
+EXT_SOURCE_1                     173378        56.381073
+NONLIVINGAREA_AVG                169682        55.179164
+NONLIVINGAREA_MODE               169682        55.179164
+NONLIVINGAREA_MEDI               169682        55.179164
+ELEVATORS_MODE                   163891        53.295980
+ELEVATORS_MEDI                   163891        53.295980
+ELEVATORS_AVG                    163891        53.295980
+WALLSMATERIAL_MODE               156341        50.840783
+APARTMENTS_MEDI                  156061        50.749729
+APARTMENTS_MODE                  156061        50.749729
+APARTMENTS_AVG                   156061        50.749729
+ENTRANCES_MODE                   154828        50.348768
+ENTRANCES_AVG                    154828        50.348768
+ENTRANCES_MEDI                   154828        50.348768
+LIVINGAREA_MEDI                  154350        50.193326
+LIVINGAREA_MODE                  154350        50.193326
+LIVINGAREA_AVG                   154350        50.193326
+HOUSETYPE_MODE                   154297        50.176091
+FLOORSMAX_MODE                   153020        49.760822
+FLOORSMAX_MEDI                   153020        49.760822
+FLOORSMAX_AVG                    153020        49.760822
+YEARS_BEGINEXPLUATATION_MEDI     150007        48.781019
+YEARS_BEGINEXPLUATATION_MODE     150007        48.781019
+YEARS_BEGINEXPLUATATION_AVG      150007        48.781019
+TOTALAREA_MODE                   148431        48.268517
+EMERGENCYSTATE_MODE              145755        47.398304
+OCCUPATION_TYPE                   96391        31.345545
+EXT_SOURCE_3                      60965        19.825307
+AMT_REQ_CREDIT_BUREAU_YEAR        41519        13.501631
+AMT_REQ_CREDIT_BUREAU_QRT         41519        13.501631
+AMT_REQ_CREDIT_BUREAU_HOUR        41519        13.501631
+AMT_REQ_CREDIT_BUREAU_DAY         41519        13.501631
+AMT_REQ_CREDIT_BUREAU_WEEK        41519        13.501631
+AMT_REQ_CREDIT_BUREAU_MON         41519        13.501631
+NAME_TYPE_SUITE                    1292         0.420148
+OBS_30_CNT_SOCIAL_CIRCLE           1021         0.332021
+DEF_30_CNT_SOCIAL_CIRCLE           1021         0.332021
+OBS_60_CNT_SOCIAL_CIRCLE           1021         0.332021
+DEF_60_CNT_SOCIAL_CIRCLE           1021         0.332021
+EXT_SOURCE_2                        660         0.214626
+AMT_GOODS_PRICE                     278         0.090403
+AMT_ANNUITY                          12         0.003902
+CNT_FAM_MEMBERS                       2         0.000650
+DAYS_LAST_PHONE_CHANGE                1         0.000325
+
+
+Column Data Type Distribution:
+float64    65
+int64      41
+object     16
+
+
+Descriptive Statistics On float64 Data Type Columns:
+       AMT_INCOME_TOTAL    AMT_CREDIT    AMT_ANNUITY  AMT_GOODS_PRICE  \
+count      3.075110e+05  3.075110e+05  307499.000000     3.072330e+05   
+mean       1.687979e+05  5.990260e+05   27108.573909     5.383962e+05   
+std        2.371231e+05  4.024908e+05   14493.737315     3.694465e+05   
+min        2.565000e+04  4.500000e+04    1615.500000     4.050000e+04   
+25%        1.125000e+05  2.700000e+05   16524.000000     2.385000e+05   
+50%        1.471500e+05  5.135310e+05   24903.000000     4.500000e+05   
+75%        2.025000e+05  8.086500e+05   34596.000000     6.795000e+05   
+max        1.170000e+08  4.050000e+06  258025.500000     4.050000e+06   
+
+       REGION_POPULATION_RELATIVE  DAYS_REGISTRATION    OWN_CAR_AGE  \
+count               307511.000000      307511.000000  104582.000000   
+mean                     0.020868       -4986.120328      12.061091   
+std                      0.013831        3522.886321      11.944812   
+min                      0.000290      -24672.000000       0.000000   
+25%                      0.010006       -7479.500000       5.000000   
+50%                      0.018850       -4504.000000       9.000000   
+75%                      0.028663       -2010.000000      15.000000   
+max                      0.072508           0.000000      91.000000   
+
+       CNT_FAM_MEMBERS   EXT_SOURCE_1  EXT_SOURCE_2   EXT_SOURCE_3  \
+count    307509.000000  134133.000000  3.068510e+05  246546.000000   
+mean          2.152665       0.502130  5.143927e-01       0.510853   
+std           0.910682       0.211062  1.910602e-01       0.194844   
+min           1.000000       0.014568  8.173617e-08       0.000527   
+25%           2.000000       0.334007  3.924574e-01       0.370650   
+50%           2.000000       0.505998  5.659614e-01       0.535276   
+75%           3.000000       0.675053  6.636171e-01       0.669057   
+max          20.000000       0.962693  8.549997e-01       0.896010   
+
+       APARTMENTS_AVG  BASEMENTAREA_AVG  YEARS_BEGINEXPLUATATION_AVG  \
+count    151450.00000     127568.000000                157504.000000   
+mean          0.11744          0.088442                     0.977735   
+std           0.10824          0.082438                     0.059223   
+min           0.00000          0.000000                     0.000000   
+25%           0.05770          0.044200                     0.976700   
+50%           0.08760          0.076300                     0.981600   
+75%           0.14850          0.112200                     0.986600   
+max           1.00000          1.000000                     1.000000   
+
+       YEARS_BUILD_AVG  COMMONAREA_AVG  ELEVATORS_AVG  ENTRANCES_AVG  \
+count    103023.000000    92646.000000  143620.000000  152683.000000   
+mean          0.752471        0.044621       0.078942       0.149725   
+std           0.113280        0.076036       0.134576       0.100049   
+min           0.000000        0.000000       0.000000       0.000000   
+25%           0.687200        0.007800       0.000000       0.069000   
+50%           0.755200        0.021100       0.000000       0.137900   
+75%           0.823200        0.051500       0.120000       0.206900   
+max           1.000000        1.000000       1.000000       1.000000   
+
+       FLOORSMAX_AVG  FLOORSMIN_AVG   LANDAREA_AVG  LIVINGAPARTMENTS_AVG  \
+count  154491.000000   98869.000000  124921.000000          97312.000000   
+mean        0.226282       0.231894       0.066333              0.100775   
+std         0.144641       0.161380       0.081184              0.092576   
+min         0.000000       0.000000       0.000000              0.000000   
+25%         0.166700       0.083300       0.018700              0.050400   
+50%         0.166700       0.208300       0.048100              0.075600   
+75%         0.333300       0.375000       0.085600              0.121000   
+max         1.000000       1.000000       1.000000              1.000000   
+
+       LIVINGAREA_AVG  NONLIVINGAPARTMENTS_AVG  NONLIVINGAREA_AVG  \
+count   153161.000000             93997.000000      137829.000000   
+mean         0.107399                 0.008809           0.028358   
+std          0.110565                 0.047732           0.069523   
+min          0.000000                 0.000000           0.000000   
+25%          0.045300                 0.000000           0.000000   
+50%          0.074500                 0.000000           0.003600   
+75%          0.129900                 0.003900           0.027700   
+max          1.000000                 1.000000           1.000000   
+
+       APARTMENTS_MODE  BASEMENTAREA_MODE  YEARS_BEGINEXPLUATATION_MODE  \
+count    151450.000000      127568.000000                 157504.000000   
+mean          0.114231           0.087543                      0.977065   
+std           0.107936           0.084307                      0.064575   
+min           0.000000           0.000000                      0.000000   
+25%           0.052500           0.040700                      0.976700   
+50%           0.084000           0.074600                      0.981600   
+75%           0.143900           0.112400                      0.986600   
+max           1.000000           1.000000                      1.000000   
+
+       YEARS_BUILD_MODE  COMMONAREA_MODE  ELEVATORS_MODE  ENTRANCES_MODE  \
+count     103023.000000     92646.000000   143620.000000   152683.000000   
+mean           0.759637         0.042553        0.074490        0.145193   
+std            0.110111         0.074445        0.132256        0.100977   
+min            0.000000         0.000000        0.000000        0.000000   
+25%            0.699400         0.007200        0.000000        0.069000   
+50%            0.764800         0.019000        0.000000        0.137900   
+75%            0.823600         0.049000        0.120800        0.206900   
+max            1.000000         1.000000        1.000000        1.000000   
+
+       FLOORSMAX_MODE  FLOORSMIN_MODE  LANDAREA_MODE  LIVINGAPARTMENTS_MODE  \
+count   154491.000000    98869.000000  124921.000000           97312.000000   
+mean         0.222315        0.228058       0.064958               0.105645   
+std          0.143709        0.161160       0.081750               0.097880   
+min          0.000000        0.000000       0.000000               0.000000   
+25%          0.166700        0.083300       0.016600               0.054200   
+50%          0.166700        0.208300       0.045800               0.077100   
+75%          0.333300        0.375000       0.084100               0.131300   
+max          1.000000        1.000000       1.000000               1.000000   
+
+       LIVINGAREA_MODE  NONLIVINGAPARTMENTS_MODE  NONLIVINGAREA_MODE  \
+count    153161.000000              93997.000000       137829.000000   
+mean          0.105975                  0.008076            0.027022   
+std           0.111845                  0.046276            0.070254   
+min           0.000000                  0.000000            0.000000   
+25%           0.042700                  0.000000            0.000000   
+50%           0.073100                  0.000000            0.001100   
+75%           0.125200                  0.003900            0.023100   
+max           1.000000                  1.000000            1.000000   
+
+       APARTMENTS_MEDI  BASEMENTAREA_MEDI  YEARS_BEGINEXPLUATATION_MEDI  \
+count    151450.000000      127568.000000                 157504.000000   
+mean          0.117850           0.087955                      0.977752   
+std           0.109076           0.082179                      0.059897   
+min           0.000000           0.000000                      0.000000   
+25%           0.058300           0.043700                      0.976700   
+50%           0.086400           0.075800                      0.981600   
+75%           0.148900           0.111600                      0.986600   
+max           1.000000           1.000000                      1.000000   
+
+       YEARS_BUILD_MEDI  COMMONAREA_MEDI  ELEVATORS_MEDI  ENTRANCES_MEDI  \
+count     103023.000000     92646.000000   143620.000000   152683.000000   
+mean           0.755746         0.044595        0.078078        0.149213   
+std            0.112066         0.076144        0.134467        0.100368   
+min            0.000000         0.000000        0.000000        0.000000   
+25%            0.691400         0.007900        0.000000        0.069000   
+50%            0.758500         0.020800        0.000000        0.137900   
+75%            0.825600         0.051300        0.120000        0.206900   
+max            1.000000         1.000000        1.000000        1.000000   
+
+       FLOORSMAX_MEDI  FLOORSMIN_MEDI  LANDAREA_MEDI  LIVINGAPARTMENTS_MEDI  \
+count   154491.000000    98869.000000  124921.000000           97312.000000   
+mean         0.225897        0.231625       0.067169               0.101954   
+std          0.145067        0.161934       0.082167               0.093642   
+min          0.000000        0.000000       0.000000               0.000000   
+25%          0.166700        0.083300       0.018700               0.051300   
+50%          0.166700        0.208300       0.048700               0.076100   
+75%          0.333300        0.375000       0.086800               0.123100   
+max          1.000000        1.000000       1.000000               1.000000   
+
+       LIVINGAREA_MEDI  NONLIVINGAPARTMENTS_MEDI  NONLIVINGAREA_MEDI  \
+count    153161.000000              93997.000000       137829.000000   
+mean          0.108607                  0.008651            0.028236   
+std           0.112260                  0.047415            0.070166   
+min           0.000000                  0.000000            0.000000   
+25%           0.045700                  0.000000            0.000000   
+50%           0.074900                  0.000000            0.003100   
+75%           0.130300                  0.003900            0.026600   
+max           1.000000                  1.000000            1.000000   
+
+       TOTALAREA_MODE  OBS_30_CNT_SOCIAL_CIRCLE  DEF_30_CNT_SOCIAL_CIRCLE  \
+count   159080.000000             306490.000000             306490.000000   
+mean         0.102547                  1.422245                  0.143421   
+std          0.107462                  2.400989                  0.446698   
+min          0.000000                  0.000000                  0.000000   
+25%          0.041200                  0.000000                  0.000000   
+50%          0.068800                  0.000000                  0.000000   
+75%          0.127600                  2.000000                  0.000000   
+max          1.000000                348.000000                 34.000000   
+
+       OBS_60_CNT_SOCIAL_CIRCLE  DEF_60_CNT_SOCIAL_CIRCLE  \
+count             306490.000000             306490.000000   
+mean                   1.405292                  0.100049   
+std                    2.379803                  0.362291   
+min                    0.000000                  0.000000   
+25%                    0.000000                  0.000000   
+50%                    0.000000                  0.000000   
+75%                    2.000000                  0.000000   
+max                  344.000000                 24.000000   
+
+       DAYS_LAST_PHONE_CHANGE  AMT_REQ_CREDIT_BUREAU_HOUR  \
+count           307510.000000               265992.000000   
+mean              -962.858788                    0.006402   
+std                826.808487                    0.083849   
+min              -4292.000000                    0.000000   
+25%              -1570.000000                    0.000000   
+50%               -757.000000                    0.000000   
+75%               -274.000000                    0.000000   
+max                  0.000000                    4.000000   
+
+       AMT_REQ_CREDIT_BUREAU_DAY  AMT_REQ_CREDIT_BUREAU_WEEK  \
+count              265992.000000               265992.000000   
+mean                    0.007000                    0.034362   
+std                     0.110757                    0.204685   
+min                     0.000000                    0.000000   
+25%                     0.000000                    0.000000   
+50%                     0.000000                    0.000000   
+75%                     0.000000                    0.000000   
+max                     9.000000                    8.000000   
+
+       AMT_REQ_CREDIT_BUREAU_MON  AMT_REQ_CREDIT_BUREAU_QRT  \
+count              265992.000000              265992.000000   
+mean                    0.267395                   0.265474   
+std                     0.916002                   0.794056   
+min                     0.000000                   0.000000   
+25%                     0.000000                   0.000000   
+50%                     0.000000                   0.000000   
+75%                     0.000000                   0.000000   
+max                    27.000000                 261.000000   
+
+       AMT_REQ_CREDIT_BUREAU_YEAR  
+count               265992.000000  
+mean                     1.899974  
+std                      1.869295  
+min                      0.000000  
+25%                      0.000000  
+50%                      1.000000  
+75%                      3.000000  
+max                     25.000000  
+
+
+Descriptive Statistics On int64 Data Type Columns:
+          SK_ID_CURR         TARGET   CNT_CHILDREN     DAYS_BIRTH  \
+count  307511.000000  307511.000000  307511.000000  307511.000000   
+mean   278180.518577       0.080729       0.417052  -16036.995067   
+std    102790.175348       0.272419       0.722121    4363.988632   
+min    100002.000000       0.000000       0.000000  -25229.000000   
+25%    189145.500000       0.000000       0.000000  -19682.000000   
+50%    278202.000000       0.000000       0.000000  -15750.000000   
+75%    367142.500000       0.000000       1.000000  -12413.000000   
+max    456255.000000       1.000000      19.000000   -7489.000000   
+
+       DAYS_EMPLOYED  DAYS_ID_PUBLISH     FLAG_MOBIL  FLAG_EMP_PHONE  \
+count  307511.000000    307511.000000  307511.000000   307511.000000   
+mean    63815.045904     -2994.202373       0.999997        0.819889   
+std    141275.766519      1509.450419       0.001803        0.384280   
+min    -17912.000000     -7197.000000       0.000000        0.000000   
+25%     -2760.000000     -4299.000000       1.000000        1.000000   
+50%     -1213.000000     -3254.000000       1.000000        1.000000   
+75%      -289.000000     -1720.000000       1.000000        1.000000   
+max    365243.000000         0.000000       1.000000        1.000000   
+
+       FLAG_WORK_PHONE  FLAG_CONT_MOBILE     FLAG_PHONE     FLAG_EMAIL  \
+count    307511.000000     307511.000000  307511.000000  307511.000000   
+mean          0.199368          0.998133       0.281066       0.056720   
+std           0.399526          0.043164       0.449521       0.231307   
+min           0.000000          0.000000       0.000000       0.000000   
+25%           0.000000          1.000000       0.000000       0.000000   
+50%           0.000000          1.000000       0.000000       0.000000   
+75%           0.000000          1.000000       1.000000       0.000000   
+max           1.000000          1.000000       1.000000       1.000000   
+
+       REGION_RATING_CLIENT  REGION_RATING_CLIENT_W_CITY  \
+count         307511.000000                307511.000000   
+mean               2.052463                     2.031521   
+std                0.509034                     0.502737   
+min                1.000000                     1.000000   
+25%                2.000000                     2.000000   
+50%                2.000000                     2.000000   
+75%                2.000000                     2.000000   
+max                3.000000                     3.000000   
+
+       HOUR_APPR_PROCESS_START  REG_REGION_NOT_LIVE_REGION  \
+count            307511.000000               307511.000000   
+mean                 12.063419                    0.015144   
+std                   3.265832                    0.122126   
+min                   0.000000                    0.000000   
+25%                  10.000000                    0.000000   
+50%                  12.000000                    0.000000   
+75%                  14.000000                    0.000000   
+max                  23.000000                    1.000000   
+
+       REG_REGION_NOT_WORK_REGION  LIVE_REGION_NOT_WORK_REGION  \
+count               307511.000000                307511.000000   
+mean                     0.050769                     0.040659   
+std                      0.219526                     0.197499   
+min                      0.000000                     0.000000   
+25%                      0.000000                     0.000000   
+50%                      0.000000                     0.000000   
+75%                      0.000000                     0.000000   
+max                      1.000000                     1.000000   
+
+       REG_CITY_NOT_LIVE_CITY  REG_CITY_NOT_WORK_CITY  \
+count           307511.000000           307511.000000   
+mean                 0.078173                0.230454   
+std                  0.268444                0.421124   
+min                  0.000000                0.000000   
+25%                  0.000000                0.000000   
+50%                  0.000000                0.000000   
+75%                  0.000000                0.000000   
+max                  1.000000                1.000000   
+
+       LIVE_CITY_NOT_WORK_CITY  FLAG_DOCUMENT_2  FLAG_DOCUMENT_3  \
+count            307511.000000    307511.000000    307511.000000   
+mean                  0.179555         0.000042         0.710023   
+std                   0.383817         0.006502         0.453752   
+min                   0.000000         0.000000         0.000000   
+25%                   0.000000         0.000000         0.000000   
+50%                   0.000000         0.000000         1.000000   
+75%                   0.000000         0.000000         1.000000   
+max                   1.000000         1.000000         1.000000   
+
+       FLAG_DOCUMENT_4  FLAG_DOCUMENT_5  FLAG_DOCUMENT_6  FLAG_DOCUMENT_7  \
+count    307511.000000    307511.000000    307511.000000    307511.000000   
+mean          0.000081         0.015115         0.088055         0.000192   
+std           0.009016         0.122010         0.283376         0.013850   
+min           0.000000         0.000000         0.000000         0.000000   
+25%           0.000000         0.000000         0.000000         0.000000   
+50%           0.000000         0.000000         0.000000         0.000000   
+75%           0.000000         0.000000         0.000000         0.000000   
+max           1.000000         1.000000         1.000000         1.000000   
+
+       FLAG_DOCUMENT_8  FLAG_DOCUMENT_9  FLAG_DOCUMENT_10  FLAG_DOCUMENT_11  \
+count    307511.000000    307511.000000     307511.000000     307511.000000   
+mean          0.081376         0.003896          0.000023          0.003912   
+std           0.273412         0.062295          0.004771          0.062424   
+min           0.000000         0.000000          0.000000          0.000000   
+25%           0.000000         0.000000          0.000000          0.000000   
+50%           0.000000         0.000000          0.000000          0.000000   
+75%           0.000000         0.000000          0.000000          0.000000   
+max           1.000000         1.000000          1.000000          1.000000   
+
+       FLAG_DOCUMENT_12  FLAG_DOCUMENT_13  FLAG_DOCUMENT_14  FLAG_DOCUMENT_15  \
+count     307511.000000     307511.000000     307511.000000      307511.00000   
+mean           0.000007          0.003525          0.002936           0.00121   
+std            0.002550          0.059268          0.054110           0.03476   
+min            0.000000          0.000000          0.000000           0.00000   
+25%            0.000000          0.000000          0.000000           0.00000   
+50%            0.000000          0.000000          0.000000           0.00000   
+75%            0.000000          0.000000          0.000000           0.00000   
+max            1.000000          1.000000          1.000000           1.00000   
+
+       FLAG_DOCUMENT_16  FLAG_DOCUMENT_17  FLAG_DOCUMENT_18  FLAG_DOCUMENT_19  \
+count     307511.000000     307511.000000     307511.000000     307511.000000   
+mean           0.009928          0.000267          0.008130          0.000595   
+std            0.099144          0.016327          0.089798          0.024387   
+min            0.000000          0.000000          0.000000          0.000000   
+25%            0.000000          0.000000          0.000000          0.000000   
+50%            0.000000          0.000000          0.000000          0.000000   
+75%            0.000000          0.000000          0.000000          0.000000   
+max            1.000000          1.000000          1.000000          1.000000   
+
+       FLAG_DOCUMENT_20  FLAG_DOCUMENT_21  
+count     307511.000000     307511.000000  
+mean           0.000507          0.000335  
+std            0.022518          0.018299  
+min            0.000000          0.000000  
+25%            0.000000          0.000000  
+50%            0.000000          0.000000  
+75%            0.000000          0.000000  
+max            1.000000          1.000000  
+
+
+List Of object Data Type Columns:
+NAME_CONTRACT_TYPE
+CODE_GENDER
+FLAG_OWN_CAR
+FLAG_OWN_REALTY
+NAME_TYPE_SUITE
+NAME_INCOME_TYPE
+NAME_EDUCATION_TYPE
+NAME_FAMILY_STATUS
+NAME_HOUSING_TYPE
+OCCUPATION_TYPE
+WEEKDAY_APPR_PROCESS_START
+ORGANIZATION_TYPE
+FONDKAPREMONT_MODE
+HOUSETYPE_MODE
+WALLSMATERIAL_MODE
+EMERGENCYSTATE_MODE
+
+
+
+Number Of Unique Values For Categorical Variables:
+NAME_CONTRACT_TYPE             2
+CODE_GENDER                    3
+FLAG_OWN_CAR                   2
+FLAG_OWN_REALTY                2
+NAME_TYPE_SUITE                7
+NAME_INCOME_TYPE               8
+NAME_EDUCATION_TYPE            5
+NAME_FAMILY_STATUS             6
+NAME_HOUSING_TYPE              6
+OCCUPATION_TYPE               18
+WEEKDAY_APPR_PROCESS_START     7
+ORGANIZATION_TYPE             58
+FONDKAPREMONT_MODE             4
+HOUSETYPE_MODE                 3
+WALLSMATERIAL_MODE             7
+EMERGENCYSTATE_MODE            2
+
+
+Unique Values for NAME_CONTRACT_TYPE Column:
+Cash loans
+Revolving loans
+
+
+
+Unique Values for CODE_GENDER Column:
+M
+F
+XNA
+
+
+
+Unique Values for FLAG_OWN_CAR Column:
+N
+Y
+
+
+
+Unique Values for FLAG_OWN_REALTY Column:
+Y
+N
+
+
+
+Unique Values for NAME_TYPE_SUITE Column:
+Unaccompanied
+Family
+Spouse, partner
+Children
+Other_A
+nan
+Other_B
+Group of people
+
+
+
+Unique Values for NAME_EDUCATION_TYPE Column:
+Secondary / secondary special
+Higher education
+Incomplete higher
+Lower secondary
+Academic degree
+
+
+
+Unique Values for NAME_FAMILY_STATUS Column:
+Single / not married
+Married
+Civil marriage
+Widow
+Separated
+Unknown
+
+
+
+Unique Values for WEEKDAY_APPR_PROCESS_START Column:
+WEDNESDAY
+MONDAY
+THURSDAY
+SUNDAY
+SATURDAY
+FRIDAY
+TUESDAY
+
+
+
+Unique Values for FONDKAPREMONT_MODE Column:
+reg oper account
+nan
+org spec account
+reg oper spec account
+not specified
+
+
+
+Unique Values for HOUSETYPE_MODE Column:
+block of flats
+nan
+terraced house
+specific housing
+
+
+
+Unique Values for WALLSMATERIAL_MODE Column:
+Stone, brick
+Block
+nan
+Panel
+Mixed
+Wooden
+Others
+Monolithic
+
+
+
+Unique Values for EMERGENCYSTATE_MODE Column:
+No
+nan
+Yes
+
+
+
