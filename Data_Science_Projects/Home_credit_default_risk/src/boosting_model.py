@@ -10,19 +10,6 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-def boosting_cross_validation(params, prepped_train_x, train_y):
-    number_of_folds = 10
-    metric_mean = params["metric"] + "-mean"
-
-    train_data = lgb.Dataset(prepped_train_x, label=train_y)
-    results = lgb.cv(
-        params, train_data, nfold=number_of_folds, early_stopping_rounds=100
-    )
-    print("Current parameters:\n", params)
-    print("Best num_boost_round:", len(results[metric_mean]))
-    print("Best CV score:", results[metric_mean][-1])
-
-
 def boosting_model(best_params, prepped_train_x, train_y):
     d_train = lgb.Dataset(prepped_train_x, label=train_y)
     model = lgb.train(best_params, train_set=d_train)
@@ -67,13 +54,11 @@ def main():
         "num_boost_round": number_of_rounds,
     }
     y = data.loc[:, "TARGET"]
-    
     data.drop("TARGET", axis=1, inplace=True)
     data = preprocessing.categorical_to_dummy(data)
     final_x, final_y = preprocessing.smotenc_oversampling(data, y)
     gbm = boosting_model(params, final_x, final_y)
-    boosting_cross_validation(params, final_x, final_y)
-#    feature_importance(gbm)
+    feature_importance(gbm)
     gbm.save_model("../output/gradient_boosting_model.txt")
 
 
