@@ -1,0 +1,311 @@
+---
+title: "HW2"
+author: "Norman Hong"
+date: "February 11, 2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+load("C:/Users/Norman/Desktop/Code_repo/notes/ANLY-512/week4/mnist_all.RData")
+library(ISLR)
+library(pROC)
+data("Weekly")
+data("OJ")
+```
+# 4.6
+
+Suppose we collect data for a group of students in a statistics class with variables $X_{1}=$hours studied, $X_{2}=$undergrad GPA, and $Y=$received an A.  We fit a logistic regression and produce estimated coefficient, $\hat\beta_{0}=-6$, $\hat\beta_{1}=.05$, $\hat\beta_{2}=1$.
+
+### (a)
+
+Estimate the probability that a student who studies for 40 hours and has an undergraduate GPA of 3.5 gets an A in the class.  
+
+The following code returns a probability of .37, which is the probability that a student who studies for 40 hours and has a 3.5 GPA get an A in the class.  
+```{r}
+1/(1+exp(-(-6 + .05*40 + 1*3.5))) # probability
+```
+
+### (b)
+
+How many hours would the student in part (a) need to study to have a 50% chance of getting an A in the class?
+$.5 = 1/(1+e^{-(-6 + .05x + 3.5)})$
+$= .5 + .5e^{6-.05x-3.5} = 1$
+$= e^{6-.05x-3.5} = 1$
+$= ln{e^{6-.05x-3.5}} = ln{1}$
+$= 6-.05x-3.5 = 0$
+$= x = 2.5/.05 = 50$
+
+Exploring the mnist dataset.
+```{r}
+plot_digit <- function(j){
+  arr784 <- as.numeric(train$x[j,])
+  col=gray(12:1/12) # creating a vector from 12 ... 1 and divide by 12
+  image(matrix(arr784, nrow=28)[,28:1], col=col,
+        main=paste("This is a ", train$y[j]))
+}
+plot_digit(1)
+plot_digit(2)
+plot_digit(3)
+```
+
+```{r}
+# determine if all values in a column are 0's for training data in 
+# mnist data set.  
+det0 <- function(df){
+  a <- c()
+  for(i in 1:784){
+    if(all(df$x[,i] == 0)){
+      a <- c(a,i)
+    } 
+  } 
+  cat(a)
+}
+det0(train)
+```
+
+```{r}
+# Creating smaller data set that only contains class 3 and class 5.  
+trainX35 <- train$x[train$y == 3 | train$y == 5,]
+trainY35 <- train$y[train$y == 3 | train$y == 5]
+# number 5 is class 1; number 3 is class 0 
+trainY35 <- as.numeric(trainY35 == 5) 
+testX35 <- test$x[test$y == 3 | test$y == 5,]
+testY35 <- test$y[test$y == 3 | test$y == 5]
+testY35 <- as.numeric(testY35 == 5) 
+dataTrain <- data.frame(X=trainX35, Y=trainY35)
+dataTest <- data.frame(X=testX35, Y=testY35)
+```
+
+```{r}
+# Determining predictor with highest variance
+vars <- apply(trainX35, MARGIN=2, var)
+sortedHighVar <- sort(vars, decreasing=TRUE, index.return=TRUE)
+sortedHighVar$ix[1:30]
+```
+
+```{r}
+# Determining predictor with lowest variance
+sortedLowVar <- sort(vars, decreasing=FALSE, index.return=TRUE)
+sortedLowVar$ix[1:100]
+```
+```{r}
+# confusion matrix.  Used to approximate best threshold
+confusion_mat <- function(df, threshold){
+  table(df$Y, df$probabilities > threshold)
+}
+```
+
+# Extra 25
+
+Build a classifier using only 1 variable (pixel).  This variable should have large variation.  Give the summary of the model and write out the logistic regression equation that has been obtained.  Determine the fraction of true positives on the test set if the fraction of false positives on the training set is kept to .1.  
+
+$log(p(X)/(1-p(X)))=.8089 - .00972X_{1}$
+```{r}
+# Fitting logistic model.  
+trainModel <- glm(Y~X.353,data=dataTrain, family=binomial)
+summary(trainModel)
+# the response is the probability an observation belongs to class 1 (number 5)
+dataTrain$probabilities <- predict(trainModel, dataTrain, type="response") 
+
+rocTrain <- roc(dataTrain$Y, dataTrain$probabilities)
+rocTrainDf <- data.frame(rocTrain$sensitivities, rocTrain$specificities, rocTrain$thresholds)
+rocTrainDf[rocTrainDf$rocTrain.specificities > .87,]
+```
+The output shows that at threshold $.74$, the training FPR is approximately $.12$, which is closest I can get to $.10$.  Recall that $FPR = 1 - Specificity$ and True positive rate (sensitivity) is $sensitivity=TP/(TP+FN)$.  The sensitivity on the test data is $.54$.
+```{r}
+dataTest$probabilities <- predict(trainModel, dataTest, type="response")
+table(dataTest$Y, dataTest$probabilities > .7476819)
+# Sensitivity
+490/(402+490)
+```
+
+```{r}
+plot(roc(dataTrain$Y, dataTrain$probabilities), grid=TRUE, main="ROC Training Data")
+plot(roc(dataTest$Y, dataTest$probabilities), grid=TRUE, main="ROC Test Data")
+cat("AUC for Training data:",auc(dataTrain$Y, dataTrain$probabilities))
+cat("\nAUC for Test data:", auc(dataTest$Y, dataTest$probabilities))
+```
+
+# Extra 26
+(variables refer to predictor variables)
+Choose two variables that have small correlation and large variation.  Find the area under the ROC curve (auc) using the training data and the test data.  Make a scatter plot of the two variables, colored by the type of digit, and use this to explain the performance of the classifier.  
+
+```{r}
+# Determining predictor with highest variance
+sortedHighVar$ix[1:10]
+cor(trainX35[,sortedHighVar$ix[1:10]]) 
+# 1st and 5th in the sorted list has low correlation.
+# Corresponds to 353 and 216
+```
+
+```{r}
+glm.fit <- glm(Y~X.353+X.216, data=dataTrain, family=binomial)
+dataTrain$probabilities <- predict(glm.fit, dataTrain, type = "response") 
+dataTrain$pred <- as.numeric(dataTrain$probabilities > .38)
+dataTest$probabilities <- predict(glm.fit, dataTest, type = "response") 
+dataTest$pred <- as.numeric(dataTest$probabilities > .38)
+```
+
+```{r}
+# Roc function and auc function 
+# use roc function to determine corresponding TP when given FP.  
+plot(roc(dataTrain$Y, dataTrain$probabilities), grid=TRUE, main="ROC Training Data")
+plot(roc(dataTest$Y, dataTest$probabilities), grid=TRUE, main="ROC Test Data")
+cat("AUC for Training data:",auc(dataTrain$Y, dataTrain$probabilities))
+cat("\nAUC for Test data:", auc(dataTest$Y, dataTest$probabilities))
+
+plot(x=dataTrain$X.353, y=dataTrain$X.216, xlab='pixel 353', ylab='pixel 216', main='Predictor variable comparison', col=ifelse(dataTrain$Y==1, "red", "blue"))
+legend(1, 95, legend=c("Number 5", "Number 3"), col=c("red", "blue"), lty=1:2, cex=0.8)
+```
+The scatter plot of the two predictor variables show that there is no linearly separable line.  No matter the decision boundary used, there is no way to perfectly separate the two classes.  
+
+# 4.10
+
+This question should be answered using the Weekly data set, which is part of the ISLR package.  This data is similar in nature to the smarket data from this chapter's lab, except that it contains 1089 weekly returns for 21 years, from the beginning of 1990 to the end of 2010.
+
+### (a)
+
+Produce some numerical and graphical summaries of the Weekly data.  Does there appear to be any patterns.  
+
+There is a non-linear correlation between volume and year.  Also, the rest of the pair-wise combinations of variables appears to be uncorrelated.  This was determined from the scatterplot matrix and the correlation matrix.
+```{r}
+# numerical summary
+summary(Weekly)
+cor(Weekly[-9])
+# graphical EDA
+pairs(Weekly[-9])
+```
+
+### (b)
+
+Use the full data set to perform a logistic regression with Direction as the response variable and the five lag variables plus Volume as predictors.  Use the summary function to print the results.  Do any of the predictors appear to be statistically significant? If so, which ones?
+
+
+The intercept is statistically significant at alpha level of .01.  The coefficient for predictor variable Lag2 is statistically significant at alpha of .05.  
+```{r}
+weeklyCopy = Weekly
+# 1 = Down and 0 = Up
+weeklyCopy$Direction = as.numeric(weeklyCopy$Direction == 'Down')
+regWeekly <- glm(Direction ~ Lag1 + Lag2 + Lag3 + Lag4 + Lag5 + Volume, data=Weekly, family=binomial)
+summary(regWeekly)
+```
+
+### (c)
+Compute the confusion matrix and overall fraction of correct predictions.  Explain what the confusion matrix is telling you about the types of mistakes made by logistic regression.  
+
+The accuracy is 43.8%.  The confusion matrix shows that most of the errors are False positives.  There is about 557 observations that were predicted to be in class down but were actually up.    
+```{r}
+confusion_mat <- function(df, threshold){
+  myTab <- table(df$Direction , df$prob > threshold)
+  return(myTab)
+}
+```
+
+```{r}
+weeklyCopy$prob <- predict(regWeekly, weeklyCopy, type = "response") 
+table <- confusion_mat(weeklyCopy, .50)
+table
+
+# Computing Accuracy (TP + TN)/sum(observations)
+(table[1] + table[4])/sum(table)
+```
+
+### (d)
+Now fit the logistic regression model using a training data period from 1990 to 2008, with Lag2 as the only predictor.  Compute the confusion matrix and the overall fraction of correct predictions for the held out data (that is, the data from 2009 and 2010). (Question saying to use training model to predict the test data, 2009 and 2010)
+
+The accuracy is 0.375.  
+```{r}
+# 1 = Down and 0 = Up
+# Fitting logistic regression on 1990 to 2008 data.
+weeklyEx910 <- weeklyCopy[weeklyCopy$Year <= 2008,]
+regEx910 <- glm(Direction ~ Lag2,data=weeklyEx910, family=binomial)
+summary(regEx910)
+
+# Compute confusion matrix and accuracy rate for 2009 and 2010.  
+weekly910 <- Weekly[Weekly$Year > 2008,]
+weekly910$prob <- predict(regEx910, weekly910, type = "response")
+table <- confusion_mat(weekly910, .50)
+table
+(table[1] + table[4])/sum(table)
+```
+
+# Extra 23
+
+Replace the factor variable Purchase with a new numerical variable purchase01 which equals 1 if a customer bought Minute Maid orange juice (MM) and equals 0 if she bought Citrus Hill orange juice (CH)
+
+### (a)
+
+Fit a logistic model to predict purchase01 from all predictors.  Call this model fit.22a.  There are several predictors for which a coefficient estimate is not available.  Give a reason for each such predictor why this happens.  Look for simple arithmetic relations between some of the predictors.  
+
+This happens when the variable can be expressed as a transformation of another variable.  This causes perfect collinearity, which inflates the variance of the coefficients and causes the coefficients to be indeterminant.  For instance, STORE is equivalent to STOREID, but with the the category 0 turned into 7.  The variables SalePriceMM and SalePriceCH are a transformed version of PriceCH and PriceMM.  
+```{r}
+OJ$purchase01 = as.numeric(OJ$Purchase == 'MM')
+fit.22a <- glm(purchase01 ~ . - Purchase, data=OJ, family=binomial)
+summary(fit.22a)
+
+```
+
+### (b)
+
+Remove all predictors for which a coefficient estimate is not available and fit a new model.  Call this model fit.22b.  What are the differences between fit.22a and fit.22b, if any?
+
+No coefficient estimate, standard error or t value changed. 
+```{r}
+fit.22b <- glm(purchase01 ~ . - Purchase - ListPriceDiff - STORE - SalePriceMM - SalePriceCH - PriceDiff, data=OJ, family=binomial)
+summary(fit.22b)
+
+```
+
+### (c)
+
+Which predictors are significant for fit.22b?  Make a new model with only those predictors and call it fit.22c.  Plot the ROC curve and show that the area under the curve is approximately .89.
+
+PriceCH, DiscMM, and PctDiscMM are statistically significant at alpha level of .01. PriceMM and LoyalCH are statistically significant at alpha of .001.  
+```{r}
+fit.22c <- glm(purchase01 ~ PriceCH + DiscMM + PctDiscMM + PriceMM + LoyalCH, data=OJ, family=binomial)
+summary(fit.22c)
+OJ$pred <- predict(fit.22c, OJ, type='response')
+plot(roc(OJ$purchase01, OJ$pred))
+cat("Area under ROC Training data:", auc(OJ$purchase01, OJ$pred))
+```
+
+### (d)
+
+Consider now the predicted odds that a customer purchased Minute Maid.  How do these odds change if the price of minute maid is decreased by .01?  How do thse odds change if the price of Citrus Hill is increased by .01?  How do thse odds change if the discount offered for minute maid is increased by .01?  Note that this is essentially the same as dropping the price for minute maid, but the predicted effect on the odds is very different.
+
+$log(p(X)/(1-p(X))) = \beta_{0} + \beta_{1}X_{1} + \beta_{2}X_{2} ...$
+According to the logistic regression model from part c, if the price of minute maid (PriceMM) decreased by $.01$, the log odds has a correlated increase of $.00388$.  If the price of Citrus Hill (PriceCH) is increased by $.01$, the log odds has a correlated increase of $.0273$.  If the discount offered for minute maid is increased by .01, the log odds has a correlated increase of $.251$, which is very different from when the price of minute maid decreased by .01.
+
+# Extra 27
+
+Build a classifier that uses the 10 variables with the largest variances.  Make ROC curves for training and test data and comment on the performance of the classifier.  Is this a good way to select 10 predictors for classification?  Can you think of other ways of selecting 10 predictors for classification?
+
+
+Another way to select 10 best predictors is to select variables with lowest correlations or use lasso.  
+```{r}
+# Determine highest variance variables.
+sortedHighVar$ix[1:10]
+```
+
+```{r}
+regTrain <- glm(Y~X.353+X.325+X.180+X.187+X.216+X.324+X.403+X.382+X.243+X.208, data=dataTrain, family=binomial)
+
+dataTrain$probabilities <- predict(regTrain, dataTrain, type='response')
+dataTrain$pred <- as.numeric(dataTrain$probabilities > .5)
+dataTest$probabilities <- predict(regTrain, dataTest, type='response')
+dataTest$pred <- as.numeric(dataTest$probabilities > .5)
+
+plot(roc(dataTrain$Y, dataTrain$probabilities), main='ROC for Training Data')
+plot(roc(dataTest$Y, dataTest$probabilities), main='ROC for Test data')
+cat("AUC for Training data:",auc(dataTrain$Y, dataTrain$probabilities))
+cat("\nAUC for Test data:", auc(dataTest$Y, dataTest$probabilities))
+```
+
+
+
+
+
+
+
+

@@ -1,0 +1,266 @@
+---
+title: "hw9"
+author: "Norman Hong"
+date: "April 29, 2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+library(mlbench)
+```
+
+# Extra 67
+
+Make 500 smiley data points with sd1=sd2=.2
+
+## (a)
+
+Demonstrate with a colored plot that k means with 4 clustesr is incapable of recovering the 4 original clusters exactly.  Do another run of k-means and use a confusion matrix to show that the 4 original clusters are not recovered exactly.  
+```{r}
+set.seed(100)
+test.smiley <- mlbench.smiley(n=500, sd1=.2, sd2=.2)
+plot(test.smiley)
+```
+
+```{r}
+km.out <- kmeans(test.smiley$x, 4, nstart=10)
+plot(x=test.smiley$x, col=(km.out$cluster))
+     
+```
+
+```{r}
+table(actual=test.smiley$classes, pred=km.out$cluster)
+```
+
+## (b)
+
+Try to use hierarchical clustering with a suitable choice of linkage to recover the 4 clusters.  Explain your choice of linkage.  Use a confusion matrix to show whether this attempt is successful.
+
+After testing all 3 different linkage methods, the best method was found to be complete.  The confusion matrix shows that this attempt was almost successful.  
+```{r}
+hc <- hclust(dist(test.smiley$x), method='complete')
+pred.label <- cutree(hc, 4)
+table(test.smiley$classes, pred.label)
+```
+
+# Book 2
+Suppose that we have 4 observations, for which we compute a dissimilarity matrix, given by picture in book.  For instance, the dissimilarity between the 1st and second observations is .3, and the dissimilarity between the 2nd and 4th observations is .8.  
+
+## (a)  
+On the basis of this dissimilarity matrix, sketch the dendrogram that results from hierarchically clustering these 4 observations using complete linkage.  Be sure to indicate on the plot the height at which each fusion occurs, as well as the observations corresponding to each leaf in the dendrogram.  
+
+0.3 is the minimum dissimilarity, so fuse observations 1 and 2 to form cluster (1,2) at hight 0.3.  Now, the minimum dissimilarity is 0.45, so fuse observations 3 and 4 to form cluster (3,4) at height 0.45.  Lastly, fuse clusters (1,2) and (3,4) to form cluster ((1,2),(3,4)) at height 0.8.  
+```{r}
+distance = as.dist(matrix(c(0, 0.3, 0.4, 0.7, 
+                     0.3, 0, 0.5, 0.8,
+                     0.4, 0.5, 0.0, 0.45,
+                     0.7, 0.8, 0.45, 0.0), nrow = 4))
+plot(hclust(distance, method = "complete"))
+```
+
+## (b)  
+Repeat (a), this time using single linkage clustering.  
+
+0.3 is the minimum dissimilarity, so fuse observations 1 and 2 to form cluster (1,2) at height 0.3.  The minimum dissimilarity is 0.4, so fuse cluster (1,2) and observation 3 to form cluster ((1,2),3) at height 0.4.  Lastly, fuse clusters ((1,2),3) and observation 4 to form cluster (((1,2),3),4) at height 0.45.
+```{r}
+plot(hclust(distance, method = "single"))
+```
+
+## (c)
+Suppose that we cut the dendogram obtained in (a) such that two clusters result.  WHich observations are in each cluster?
+
+Points 1 and 2 are in cluster 1, and points 3 and 4 are in cluster 2.  
+
+## (d)
+Suppose that we cut the dendrogram obtained in (b) such that two clusters result.  Which observations are in each cluster?
+
+Points 1, 2, and 3 are in cluster 1 and point 4 is in cluster 2.  
+
+## (e)
+It is mentioned in the chapter that at each fusion in the dendogram, the position of the two clusters being fused can be swapped without changing the meaning of the dendrogram.  Draw a dendrogram that is equivalent to the dendrogram in (a), for which two or more of the leaves are repositioned, but for which the meaning of the dendrogram is the same.  
+
+```{r}
+plot(hclust(distance, method = "complete"), labels = c(2,1,4,3))
+```
+
+# Extra 72
+Consider the concrete strength data from problem 37.  There are 8 numerical predictors and 1 numerical response.  Load the data and split them into a training and test set (70%/30%).  We want to predict strength.
+
+## (a)
+Compute the principal components of the matrix of predictors for the training set.  Fit a linear model to predict strength from the 1st principal component (simple regresssion).
+
+```{r include=FALSE}
+concrete = read.csv('Concrete_Data.csv')
+colnames(concrete) = c('x1','x2','x3','x4','x5','x6','x7','x8','y')
+```
+
+```{r}
+trainIdx <- sample(nrow(concrete), .7*nrow(concrete), replace=FALSE)
+train <- concrete[trainIdx,]
+test <- concrete[-trainIdx,]
+```
+
+```{r}
+pr.out <- prcomp(train[,1:8], scale =TRUE)
+pr.out$x
+train.prc <- data.frame(pc1 = pr.out$x[,1], y = train$y)
+
+lm.fit <- lm(y ~ pc1, data=train.prc)
+summary(lm.fit)
+```
+
+## (b)
+Make predictions for the test set, using the same model.  You have to use the loading vectors which were found from the principal component analysis of the training data.  
+
+```{r}
+
+```
+
+
+# Book 9 
+Consider the USArrests data.  We will now perform hierarchical clustering on the states.  
+
+## (a)
+Using hierarchical clustering with complete linkage and Euclidean distance, cluster the states. 
+
+```{r}
+library(ISLR)
+set.seed(100)
+data(USArrests)
+hc.complete = hclust(dist(USArrests, method = "euclidean"), method = "complete")
+plot(hc.complete, main = "Complete Linkage", xlab = "", sub = "", cex = 1)
+
+```
+
+## (b)
+Cut the dendrogram at a height that results in 3 distinct clusters.  Which states belong to which clusters?
+
+```{r}
+plot(hc.complete, main = "Complete Linkage", xlab = "", sub = "", cex = .9)
+abline(h = 120, col = "red")
+```
+
+```{r}
+cutree(hc.complete, 3)
+```
+
+## (c)
+Hiearchically cluster the states using complete linkage and Euclidean distance, after scaling the variables to have standard deviation 1.  
+
+```{r}
+UsArrests.scale = scale(USArrests)
+
+hc.complete = hclust(dist(UsArrests.scale, method = "euclidean"), method = "complete")
+plot(hc.complete, main = "Complete Linkage on scaled data", xlab = "", sub = "", cex = .9)
+```
+
+## (d)
+What effect does scaling the variables have on the hierarchical clustering obtained?  In your opinion, should the variables be scaled before the inter-observation dissimilarities are computed? Provide a justification for your answer.
+
+The variables should be scaled before the interobservation dissimilarities are computed.  The reason is that the variables are in different units and the range of some variables are larger than others.  Therefore, it makes the most sense to scale the variables before any similarity measure is computed.
+
+# Extra 69
+In this problem, you will use k-means clustering for the smiley data, for different values of sd=sd1=sd2.  Use 500 points and 4 clusters throughout. 
+
+## (a)
+Demonstrate that for small values of sd, k-means clustering recovers the 4 clusters in the data reasonably well.  Use confusion matrices to show this.
+
+When sd1=sd2=.0001, the algorithm was able to perfectly recover the 4 clusters.  However, when sd=.1, the recovery is not as well.  
+```{r}
+set.seed(100)
+smiley <- mlbench.smiley(n=500, sd1 = 0.0001, sd2 = 0.0001)
+km.out <- kmeans(smiley$x, 4, nstart=100)
+table(actual=smiley$classes,  predicted=km.out$cluster)
+```
+
+```{r}
+set.seed(100)
+smiley <- mlbench.smiley(n=500, sd1 = 1, sd2 = 1)
+km.out <- kmeans(smiley$x, 4, nstart=100)
+table(actual=smiley$classes,  predicted=km.out$cluster)
+```
+
+## (b)
+Show that if sd becomes larger, the 4 clusters are no longer recovered well.  Find an approximate value of sd for which this change occurs (two decimal digits is enough), and explain how k-means clustering behaves for larger values of sd, using colored plots and two different examples.
+
+It seems that around sd=.55 is when the clusters start to really mix and become hard to distinguish.  For larger values of sd, the k-means clustering is unable to correctly recover the clusters because the clusters have big overlap.  
+```{r}
+smiley.graph <- function(sd){
+  set.seed(100)
+  smiley <- mlbench.smiley(n=500, sd1=sd, sd2=sd)
+  km.out <- kmeans(smiley$x, 4, nstart=100)
+  # table(actual=smiley$classes, predicted=km.out$cluster)
+  plot(smiley$x, col=(km.out$cluster), main=sd, xlab='', ylab='', pch=20, cex=2)
+}
+```
+
+```{r}
+for (x in seq(.1, 1, .05)){
+  smiley.graph(x)
+}
+```
+
+```{r}
+smiley.graph(100)
+smiley.graph(.001)
+
+```
+
+## Extra 71
+This problem uses the MNIST image classification data, available as mnist_all.RData that were used earlier.  We use the training data only for all digits.  Extract the training data and place them in suitable data frames.
+
+## (a)
+Apply k-means clustering with two clusters.  Can you tell which digits tend to be clustered together?
+
+If we consider the majority, then digits 0, 2, 3, 6 tend to be clustered together, and digits 1, 4, 5, 7, 8 tend to be clustered together.  
+```{r include=FALSE}
+load("mnist_all.Rdata")
+```
+
+```{r}
+set.seed(100)
+km.out <- kmeans(train$x, 2, nstart=100)
+table(train$y, km.out$cluster)
+```
+
+## (b)
+Apply k-means clustering with 10 clusters.  How well do the cluster labels agree with the actual digit labels?  Use a confusion matrix to answer this question.
+
+The results show that correct labels are not well predicted.  
+```{r}
+set.seed(100)
+km.out <- kmeans(train$x, 10, nstart=30)
+table(train$y, km.out$cluster)
+```
+
+## (c)
+Apply dbscan clustering, with suitable choices of eps and minPts obtained from a k-nearest neighbor plot.  Justify your choices.  Then determine how well the cluster labels agree with the actual digit labels, using a confusion matrix.
+
+The cluster labels from dbscan only created 2 diffrent clusters.  Therefore, it does not agree well with the actual digit labels.  
+```{r include=FALSE}
+library(dbscan)
+```
+
+```{r}
+set.seed(100)
+kNNdistplot(train$x, 5)
+abline(h=1700, col=4)
+```
+
+```{r}
+set.seed(100)
+db.out <- dbscan(train$x, eps=1700, minPts=20)
+table(actual=train$y, pred=db.out$cluster)
+```
+
+
+
+
+
+
+
+
+
+
+
+

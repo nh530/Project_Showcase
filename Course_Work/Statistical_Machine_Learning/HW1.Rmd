@@ -1,0 +1,292 @@
+---
+title: "HW1"
+author: "Norman Hong"
+date: "February 8, 2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ISLR)
+library(MASS)
+library(knitr)
+data("Auto")
+data("Carseats")
+data("Boston")
+data("cars")
+opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE)
+```
+
+# 3.3
+Suppose we have a data set with 5 predictors, $X_{1} = GPA$, $X_{2} = IQ$, $X_{3} = Gender$ (1 = Female and 0 = male), $X_{4}=$ Interaction between GPA and IQ, and $X_{5} =$ interaction between GPA and Gender.  The response is starting salary after graduation (in t housands of dollars).  Suppose we use least squares to fit the model, and get $\hat\beta_{0} = 50$, $\hat\beta_{1} = 20$, $\hat\beta_{2} = .07$, $\hat\beta_{3} = 35$, $\hat\beta_{4} = .01$, and $\hat\beta_{5} = -10$.  
+
+### (a) 
+For a fixed value of IQ and GPA, males earn more on average than females provided that GPA is high enough.  The interaction term between GPA and Gender causes females to earn less than males once gpa is high enough.  
+The regression model is: $\hat{y} = \hat\beta_{0} + \hat\beta_{1}X_{1} + \hat\beta_{2}X_{2} + \hat\beta_{3}X_{3} + \hat\beta_{4}X_{1}X_{2} + \hat\beta_{5}X_{1}X_{3}$.  When $X_{3}=1$, this corresponds to the equation for females, the regression equation is: $\hat{y} = \hat\beta_{0} + \hat\beta_{1}X_{1} + \hat\beta_{2}X_{2} + \hat\beta_{3} + \hat\beta_{4}X_{1}X_{2} + \hat\beta_{5}X_{1}$.  When $X_{3}=0$, the regression equation for males is: $\hat{y} = \hat\beta_{0} + \hat\beta_{1}X_{1} + \hat\beta_{2}X_{2} + \hat\beta_{4}X_{1}X_{2}$.  The difference between the two equations is $\hat{y_f}-\hat{y_m}= \hat\beta_{3}+\hat\beta_{5}X_1$.  Since $\hat\beta_{5}= -10$, if gpa is large enough, the difference in income between females and males turn from positive to negative.  
+
+### (b) 
+$Y=50 + 20X_{1} + .07X_{2} + 35X_{3} + .01X_{4} -10X_{5} =50 + 20X_{1} + .07X_{2} + 35X_{3} + .01X_{1}X_{2} -10X_{1}X_{3}$
+$= 50 + 20(4) + 110(.07) + 35X_{3} + .01(110)(4) + (-10)(4)X_{3}$
+$= 130 + 7.7 + 4.4 -5$ = 137
+
+### (c)
+False.  The size of the coefficient is relative to the scale used to measure the variables.  In other words, the magnitude of the coefficients is relative to the units used.  The only way to determine if there is statistical evidence for an interaction effect is to look at the t-tets.  
+
+# 3.8
+
+### (a)
+Use the lm() function to perform a simple linear regression with mpg as the response and hosepower as the predictor.  Use the summary() function to pring the results.  Comment on the output.  
+
+There is a relationship between mpg and horsepower because the coefficient for hosepower is very statistically significant.  For every 1 unit increase in horsepower, mpg decreases by .15 units.  The standard deviation of the coefficient is very small, which could be the reason for the very low p value.  The 95% confidence interval does not include 0.  The associated 95% confidence interval for the response variable when horsepower is 98 is between 23.97 and 24.96.  The 95% prediction interval for the response variable when horsepower is 98 is from 14.80 to 34.12.  The $R^{2}$ coefficient is .605, which implies that about 60.5% of the variation in Y is explained by the regression or explained by the variable X.  
+```{r}
+reg <- lm(mpg ~ horsepower, data=Auto)
+summary(reg)
+confint(reg)
+predict(reg, data.frame(horsepower=98), interval='confidence')
+predict(reg, data.frame(horsepower=98), interval='prediction')
+```
+
+### (b)
+Plot the response and the predictor.  Use the abline() function to display the least squares regression line. 
+```{r}
+plot(x=Auto$horsepower, y=Auto$mpg, xlab='Horsepower', ylab='MPG', 
+     main="Linear regression of MPG and Horsepower")
+abline(reg, col=3)
+```
+
+### (c)
+Use the plot() function to produce diagnostic plots of the least squares regression fit.  
+
+The plot of fitted values vs residuals show a non-linear relationship.  The residuals don't have consistent values.  This indicates heteroscedasticity.  Smaller fitted values tend to have error terms with high magnitude, fitted values around 15 to 20 tend to have error terms with low magnitude, and large fitted values tend to have residuals that range from -10 to 15.  The fitted values vs residuals also indicate a point with residual of 14 and fitted value of 19.  This point is an outlier because it does not follow the overall pattern.  The obseration index vs leverage plot does not indicate that any high-leverage data points.  The qqplot shows that the standardized residuals are normally distributed.  
+```{r pressure}
+# residuals plot
+# plot(predict(reg), residuals(reg), xlab='fitted values', ylab='residuals')
+# plot(predict(reg), rstudent(reg), xlab='fitted values', ylab='studentized residuals')
+# plot of leverage vs index of observation.
+plot(hatvalues(reg), xlab='Index of each observation', ylab='Leverage Statistic') 
+# plot(hatvalues(reg), rstudent(reg), xlab='Leverage', ylab='Studentized residuals')
+par(mfrow=c(2,2))
+plot(reg)
+```
+
+# 3.10
+This question should be answered using the Carseats data set.
+
+### (a)
+Fit a multiple regression model to predict Sales using Price, Urban, and US.
+```{r}
+lm.fit <- lm(Sales ~ Price + Urban + US, data=Carseats)
+summary(lm.fit)
+```
+
+### (b)
+Provide an interpretation of each coefficient in the model.  Some of the variables in the model are qualitative.  
+
+If price, urban, and US variables are all 0, then the unit sale of carseats is predicted to be 13.04.  Since the sales variable is in thousands, the unit sale of carseats is 13,000.  For a 1 unit increase in price, the sale of carseats decreases by .054 units.  Stores in urban locations experience a decrease of .02 units of carseats sold when compared to a rural location.  Stores in the US experience an increase in the sale of carseats by 1.2 units when compared to locations outside the United States.  The intercept, Price and US coefficients are statistically significant at the , whereas the Urban coefficient is not statistically significant.  
+
+### (c)
+Write out the model in equation form, being careful to handle the qualitative variables properly.
+$Sales=\beta_{0}+\beta_{1}Price+\beta_{2}Urban+\beta_{3}US$  
+$Sales=\beta_{0}+\beta_{1}Price+\beta_{2}+\beta_{3}US$ for urban stores  
+$Sales=\beta_{0}+\beta_{1}Price+\beta_{3}US$ for rural stores  
+$Sales=\beta_{0}+\beta_{1}Price+\beta_{2}Urban+\beta_{3}$ for stores in United states  
+$Sales=\beta_{0}+\beta_{1}Price+\beta_{2}Urban$ for stores outside the United States  
+$Sales=\beta_{0}+\beta_{1}Price+\beta_{2}+\beta_{3}$ for urban stores inside United States.  
+$Sales=\beta_{0}+\beta_{1}Price$ for rural stores outside of United States.  
+
+# 3.15.
+This problem involves the Boston data set, which we saw in the lab for this chapter.  We will now try to predict per capita crime rate using the other variables in this data set.  In other words, per capita crime rate is the response, and the other variables are the predictors.  
+
+### (a)
+For each predictor, fit a simple linear regression model to predict the response.  Describe your results.  In which of the models is there statistically significant association between the predictor and the response?  Create some plots to back up your assertions.  
+
+The coefficient for zn, indus, nox, rm, age, dis, rad, tax, ptratio, black, lstat, and medv variables are all statistically significant at alpha level of .001.  The chas variable is not statistically significant.  
+```{r}
+summary(lm(Boston$crim ~ Boston$zn))
+summary(lm(Boston$crim ~ Boston$indus))
+summary(lm(Boston$crim ~ Boston$chas))
+summary(lm(Boston$crim ~ Boston$nox))
+summary(lm(Boston$crim ~ Boston$rm))
+summary(lm(Boston$crim ~ Boston$age))
+summary(lm(Boston$crim ~ Boston$dis))
+summary(lm(Boston$crim ~ Boston$rad))
+summary(lm(Boston$crim ~ Boston$tax))
+summary(lm(Boston$crim ~ Boston$ptratio))
+summary(lm(Boston$crim ~ Boston$black))
+summary(lm(Boston$crim ~ Boston$lstat))
+summary(lm(Boston$crim ~ Boston$medv))
+
+plot(Boston$chas, Boston$crim)
+plot(Boston$indus, Boston$crim)
+plot(Boston$age, Boston$crim)
+plot(Boston$nox, Boston$crim)
+plot(Boston$rm, Boston$crim)
+```
+
+### (b)
+Fit a multiple regression model to predict the response using all of the predictors.  Describe your results. For which predictors can we reject the null hypothesis.
+
+The F-statistic tells us that the null is rejected in favor of the alternative hypothesis where there is atleast 1 variable with a coefficient that does not equal 0.  The F statistic does not tell us which one though.  At alpha level of .001, the only coefficients were we can reject the null hypothesis are for the dis and rad variables.  This is very differet from the previous simple bivariate linear models because when controlling for other variables, most variables are no longer statistically significant at alpha of .001.  The zn, intercept, and black variables are statistically significant at alpha of .05, whereas in the bivarate models, these coefficients were all statistically significant at alpha level of .001.  The medv variable is statistically significant with p value of .09.  The nox and lstat variables are statistically significant at alpha of .1.  The rm, age, indus, tax, and ptratio are no longer statistically significant in the multivariate model.  This is a huge difference when compared to the simple linear regression model where these coefficients were statistically significant at alpha of .001.  The chas variable remained statistically insignificant.  
+```{r}
+summary(lm(crim ~ zn+indus+chas+nox+rm+age+dis+rad+tax+ptratio+black+lstat+medv, data=Boston))
+
+```
+
+# Extra 10
+Consider the built-in data set cars.  Fit a linear regression model to the data.  What are the 3 observations with the largest standardized residuals (in magnitude)?  What are their leverages?  Where are the 3 observations with the largest leverages?  What are their standardized residuals? Use the R function influence.lm
+
+The indexes of the 3 observations with the highest standardized residuals in magniude are 49, 23, and 35.  The leverage of these 3 observations are .073, .021, .024, respectively.  The indexes of the 3 observations with the highest leverage are 1, 2, and 50.  The corresponding standardized residuals are .26, .81, and .28, respectively.  
+```{r}
+fit <- lm(dist ~ speed, data=cars)
+sort(abs(rstudent(fit)), decreasing=TRUE)[1:3]
+lev <- hatvalues(fit)
+lev[c(49, 23, 35)]
+
+sort(lev, decreasing=T)[1:3]
+rstudent(fit)[c(1,2,50)]
+```
+
+# 3.9
+This question involves the use of multiple linear regression on the Auto data set.  
+
+### (a)
+Produce a scatterplot matrix which includes all of the variables in the data set. 
+```{r}
+pairs(Auto)
+```
+
+### (b) 
+Compute the matrix of correlations between the variables using the function cor().  You will need to exclude the name variable, which is qualitative.  
+```{r}
+cor(Auto[-9]) # column 9 is the names varibable, which is not numeric
+```
+
+### (c)
+Use the lm() function to perform a multiple linear regression with mpg as the response and all other variable except name as the predictors.  Use the summary() function to print the results.  Comment on the output.  For instnace:
+i. Is there a relationship between the predictors and the response?
+ii. Which predictors appear to have a statistically significant relationship to the response?
+iii.  What does the coefficient for the year variable suggest?
+
+If all variables are 0, then the predicted mpg is -17.  The intercept is statistically significant at alpha of .001.  There is statistical significance to believe that the intercept is not 0.  Weight, year and origin have coefficients that are statistically significant at alpha of .001.  So it seems that the coefficients are not 0 when controlling for the variables included in the model.  Displacement is statistically significant at alpha of .01.  If we were to do a hypothesis test with alpha of .05, then there is statistical evidence that displacement, weight, year, and origin variables are correlated to the response.  There is no statistical evidence to believe that cylinders, horsepower, and acceleration variables have a relationship with mpg.  The coefficient for the year variable suggests that a 1 unit increase in year is correlated with a .750 increase in mpg.  
+```{r}
+lin.fit <- lm(mpg~cylinders+displacement+horsepower+weight+acceleration+year+origin, data=Auto)
+summary(lin.fit)
+```
+
+### (d)
+Use the plot() function to produce diagnostic plots of the linear regression fit.  Comment on any problems you see with the fit.  Do the residual plots suggest any unusually large outliers?  Does the leverage plot identify any observations with unusually high leverage?
+
+The residual plots does not suggest any unusually large outliers that deviate substantially from the overall pattern.  The residual plot does suggest that there is a non-linear fit and the error term does not have constant or approximately constant values for each observation.  The residual plot also suggets that there is a lot of observed values that differ substantially from the corresponding predicted values.  The leverage plot indicates that there is one observation that is a high-leveraged point.  This point has a leverage of about .18
+```{r}
+plot(predict(lin.fit), residuals(lin.fit), xlab='Fitted Values', ylab='residuals')
+plot(predict(lin.fit), rstudent(lin.fit), xlab='Fitted Values', ylab='standardized residuals')
+plot(predict(lin.fit), hatvalues(lin.fit), xlab='Fitted Values', ylab='Leverage')
+```
+
+### (e)
+Use the * and : symbols to fit linear regression models with interaction effects.  Do any interactions appear to be statistically significant?
+
+The horsepower:weight interaction and horsepower:year interaction are both statistically significant at alpha level of .001.  This means if we performed a hypothesis at alpha level of .001, this would be statistical evidence to reject the null in favor of the alternative hypothesis.  In other words, there is statistical evidence for a relationship between the interaction term and the response variable.  
+```{r}
+lin.fit <- lm(mpg~cylinders+displacement+origin+horsepower*weight+year*horsepower+weight*acceleration, data=Auto)
+summary(lin.fit)
+```
+
+### (f)
+Try a few different transformations of the variables, such as log(X), sqrt(X), X^2.  Comment on your findings.  
+
+Displacement, horsepower, weight variables have a non-linear relationship with mpg, so I will focus on these variables. This was determined by looking at the scatterplot matrix.  The model with no transformed variables show that dispalcement is statistically significant at alpha of .01, horsepower is not statistically significant, and weight is statistically significant at alpha of .001.  In the model with the transformed variables, displacement is no longer significant, horsepower is now statistically significant at alpha of .01, weight is no longer significant at alpha of .001,  log(displacement) is not significant, log(horsepower) is significant at alpha of .001, and sqrt(weight) is significant at alpha of .01.  Because log(displacement) is not significant, it might not be necessary to include this transformed variable.  The statistical evidence points to keeping log(horsepower) and sqrt(weight) in the model.  
+```{r}
+lin.fit <- lm(mpg~cylinders+displacement+horsepower+weight+acceleration+year+origin, data=Auto)
+summary(lin.fit)
+lin.fit <- lm(mpg~cylinders+displacement+horsepower+weight+acceleration+year+origin+log(displacement)+log(horsepower)+sqrt(weight), data=Auto)
+summary(lin.fit)
+```
+
+# Extra 14
+
+### (a)
+Simulate a time series X of length N=100 from the above formula, using the lag k=1, coefficients $\beta_{0}=1$ and $\beta_{1}=-.5$ and error terms $\epsilon_{t}=N(0,0.2^2)$.  The formula tells you how to make $X_{t}$ for $t \geq k+1$ from $X_{k}$.  Choose $X_{1}$ arbitrarily.  Plot $X$ as a vector.  Convert $X$ into a timeseries object with function as.ts() and plot it again.  Describe the plot.
+
+The time series plot has each point connected by a line. The line connects point t to t+1 for all points.   
+```{r}
+simTS <- function(x1,b1){
+  b0 <- 1
+  b1 <- b1
+  xt <- rep(0, 100)
+  xt[1] <- x1
+  for(i in 2:100){
+    e <- rnorm(1, 0, .4)
+    xt[i] = b0 + b1*xt[i-1] + e
+  }
+  return(xt)
+}
+ts <- simTS(1,-.5)
+plot(ts)
+ts <- as.ts(ts)
+plot(ts)
+```
+
+### (b)
+Repeat part a) with $\beta_{0}=1$, $\beta_{1}=.5$.  How does the plot change?
+
+The change from point t to point t+1 is less abrupt.  It looks as if the time series is a little more consistant.  
+```{r}
+ts <- simTS(1,.5)
+plot(ts, xlab='X')
+ts <- as.ts(ts)
+plot(ts, xlab='X')
+```
+
+### (c) 
+Repeat part a) with $\beta_{0}=1$, $\beta_{1}=-.9$.  How does the plot change?
+
+There is more spikes in the time series plot.  This corresponds to more abrupt changes from point t to t+1.  
+```{r}
+ts <- simTS(1,-.9)
+plot(ts, xlab='X')
+ts <- as.ts(ts)
+plot(ts, xlab='X')
+```
+```{r}
+ts <- simTS(1,.9)
+plot(ts, xlab='X')
+ts <- as.ts(ts)
+plot(ts, xlab='X')
+```
+
+# Extra 15
+Simulate a time series $X$ as in the previous problem $N=100$ observations, lag $k=1$, $\beta_{0}=1$, $\beta_{1}=-.5$, and $\epsilon_{t}=N(0,0.2^2)$. 
+
+### (a)
+Make a scatterplot of $X_{t}$ against $X_{t-1}$ for $t= 2,...N$ and describe it.  
+
+The plot shows a clear negative relationship between $X_{t}$ and $X_{t-1}$ plus some noise.  
+```{r}
+ts <- simTS(1,-.5)
+ts.1 <- rep(0, 100)
+for (i in 2:100){
+  ts.1[i] <- ts[i-1]
+}
+ts <- ts[-1]
+ts.1 <- ts.1[-1]
+plot(x=ts.1, y=ts)
+```
+
+### (b)
+Create a data frame of $N-1$ observations and 2 columns that contains $(X_{t-1}, X_{t})$ in row t.  Use this to fit a linear model to predict $X_{t}$ from $X_{t-1}$.  Compare the estimated coefficients to the $\beta_{i}$.  Also compare the residual standard error to the standard deviation of the $\epsilon_{t}$ term.  Summarize your results and observations.
+
+The estimated intercept is $1.1$, which is close to $1$.  The estimated slope is $-.6$, which is close to $-.5$.  Both coefficients are statistically significant at alpha level of .001, which means there is statistical evidence that the estimated coefficients are not 0.  The residual standard error is the estimated standard deviation of the error term.  In this case, they are very similar to each other.  
+```{r}
+data <- data.frame(X=ts.1, Y=ts)
+lm.fit <- lm(Y~X, data=data)
+summary(lm.fit)
+```
+
+
+
+
+
+
+
+

@@ -1,0 +1,385 @@
+---
+title: "HW4"
+author: "Norman Hong"
+date: "March 17, 2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(MASS)
+library(boot)
+data("Boston")
+```
+
+# 9
+Consider the Boston housing data set, from the MASS library.
+
+## (a)
+Based on this data set, provide an estimate for the population mean of medv.  Call this estimate mu_hat.
+
+```{r}
+# Boston data set has 506 observations, so we create a resample of same size.  
+set.seed(314)
+mean.bootstrap <- function(data=Boston, index=nrow(data)){
+  mean(data$medv[index]) # Same index can be used more than once.  
+}
+# calculated mean of 1 resample.
+mu_hat <- mean.bootstrap(Boston, sample(nrow(Boston), nrow(Boston), replace=TRUE))
+cat('mean of a single resample',mu_hat)
+cat('\n')
+cat('mean of original sample', mean(Boston$medv))
+```
+
+## (b)
+Provide an estimate of the standard error of mu_hat.  Interpret this result.  
+(Calculate the standard deviation of the sample mean, which is mu_hat)
+
+The standard deviation of the sample mean is about .4.  This describes the spread of the sample mean random variable.  
+```{r}
+set.seed(314)
+sd.bootstrap <- function(data, index){
+  sd(data$medv[index])
+}
+sd.sample <- sd.bootstrap(Boston, sample(506, 506, replace=TRUE))
+cat('standard error of the sample mean using a single resample', sd.sample/sqrt(nrow(Boston)))
+cat('\n')
+cat('standard error of the sample mean using original sample', sd(Boston$medv)/sqrt(nrow(Boston)))
+
+```
+
+## (c)
+Now estimate the standard error of mu_hat using the bootstrap.  How does this compare to your answer from (b)?
+
+The bootstrap estimate differs from the answer in b by a small margin.  The boostrap estimate is .403 and the estiamte computed in (b) is .395.  
+```{r}
+set.seed(314)
+boot(Boston, mean.bootstrap, 10000)
+```
+
+# Extra 38
+Suppose we are given a training set with n observations and want to conduct k-fold cross-validation.  Assume always that $n=km$ where m is an integer.  
+
+##(a)
+Let $k=2$.  Explain carefully why there are $1/2 \cdot {n \choose m}$ ways to partition the data into 2 folds.  
+
+2 folds mean that when $k=2$ we want to create a pair of 2 different group where the sum of the length of the 2 groups is $n$ out of the $n$ integers.  So, $k$ determines the number of groups to create.  $m$ determines the number of elements that belong to each group.  There are $(n) \cdot (n-1) \cdot (n-2) \cdot ...\cdot 1$ ways to put n items into n spots.  Because we're trying to group these n items into 2 groups, the order does not matter within the 2 groups.  Therefore, we divide by $m! \cdot m!$.  Since these 2 groups represent a pair, the order of these 2 groups does not matter.  For example, ${group1, group2} = {group2, group1}$.  This means that we have to divide by $k=2!$.  Using algebra, this can be written into the nice form $1/2 \cdot {n \choose m}$.
+
+## (b) 
+Let $k=3$.  Explain carefully why there are $n!/(3!m!m!m!)$ ways to partition the data into 3 folds.  
+
+3 folds mean that when $k=3$ we want to create a group of 3 different group where the sum of the length of the 3 groups is $n$ out of the $n$ integers.  So, $k$ determines the number of groups to create.  $m$ determines the number of elements that belong to each group.  There are $(n) \cdot (n-1) \cdot (n-2) \cdot ...\cdot 1$ ways to put n items into n spots.  Because we're trying to group these n items into 3 groups, the order does not matter within the 3 groups.  Therefore, we divide by $m! \cdot m! \cdot m!$.  Since these 3 groups represent a single group, the order of these 3 groups does not matter.  For example, ${group1, group2, group3} = {group2, group1, group3}$.  This means that we have to divide by $k= 3!$.  Using algebra, this can be written into the nice form $n!/(3!m!m!m!)$.
+
+## (c)
+Guess a formula for the number of ways to partition the data into k folds for general k.  Check if your formula gives the correct answer for $k=n$ (leave-one-out c.v.). 
+
+Formula: $n!/(k!)(\prod_{i=1}^{k}m_{i}!)$.  The formula gives the correct answer for leave-one-out c.v.  In leave-one-out, $k=n$ and $m=1$.  Therefore, the equation will equal to 1 because there is only 1 way to create a group of $n$ different groups where the sum of the length of the $n$ groups is $n$ and each of the $n$ different groups have 1 element.  
+
+# Extra 41
+Consider the build-in data set cars.  We wish to predict the braking distance, dist, from speed.  Use leave-one-out cross validation to find the best polynomial regression model.  Repeat with 10-fold cross validation.  Compare the two answers.  
+
+The results show that the two metheds have very similar scores.  Both methods indicate that the models with low MSE correspond to degrees of 1 to 10.  These models correspond to the best fit.  However, it is best to use the most simpliest model possible, so the model with linear variable is the best.     
+
+```{r}
+data("cars")
+set.seed(314)
+cv.score <- rep(NA, 15)
+
+# Leave-1-out c.v.
+for(k in 1:15){
+  glm.fit <- glm(dist~poly(speed,k), data=cars) # using glm to do linear regression
+  cv.err <- cv.glm(cars, glm.fit)
+  cv.score[k] <- cv.err$delta[1] # delta[1] = non-bias corrected cv score.  
+}
+
+plot(cv.score, type='b', main='Comparison of different polynomial fit',
+     xlab='polynomial degree', ylab='MSE', col=1)
+
+# 10-fold c.v.
+cv.score <- rep(NA, 15)
+for(k in 1:15){
+  glm.fit <- glm(dist~poly(speed,k), data=cars) # using glm to do linear regression
+  cv.err <- cv.glm(cars, glm.fit, K=10)
+  cv.score[k] <- cv.err$delta[1] # delta[1] = non-bias corrected cv score.  
+}
+
+lines(cv.score, type='b', col=2)
+legend('left', legend=c('LOOCV', '10-fold CV'), col=c(1,2), pch=1,
+  bty = "n", 
+  pt.cex = 2, 
+  cex = 1.2, 
+  text.col = "black", 
+  horiz = F , 
+  inset = c(0.1, 0.1))
+```
+
+# 5
+In Chapter 4, we used logistic regression to predict the probability of default using income and balance on the Default data set.  We will now estimate the test error of this logistic regression model using the validation set approach.  Do not forget to set a random seed before beginning your analysis. 
+```{r, include=FALSE}
+library("ISLR")
+data("Default")
+```
+
+## (a)
+Fit a logistic regression  model that uses income and balance to predict default.
+```{r}
+fit.log <- glm(default~income+balance, data=Default, family='binomial')
+summary(fit.log)
+```
+
+## (b)
+Using the validation set approach, estimate the test error of this model.  In order to do this, you must perform the following steps:
+### i)
+Split the sample set into a training set and a validation set.
+
+```{r}
+set.seed("314")
+obs <- nrow(Default)
+train <- sample(obs, obs/2, replace=FALSE) # 50-50 split in data.
+```
+
+### ii)
+Fit a multiple logistic regression model using only the training observations
+```{r}
+Default.copy <- Default
+Default.copy$default <- as.numeric(Default.copy$default == 'Yes') # 1 = 'Yes'
+fit.log <- glm(default~income+balance, data=Default.copy, family="binomial", subset=train)
+summary(fit.log)
+```
+
+### iii)
+Obtain a prediction of default status for each individual in the validation set by computing the posterior probability of default for that individual,  and classifying the individual to the default category if the posterior probability is greater than .5. 
+```{r}
+probs <- predict(fit.log, Default[-train,], type='response')
+pred <- rep(0, length(probs))
+pred[probs > .5] <- 1
+```
+
+### iv)
+Compute the validation set error, which is the fraction of the observations in the validation set that are misclassified. 
+
+```{r}
+mis <- pred != Default.copy$default[-train]
+mean(mis)
+```
+
+## (c)
+Repeat the process in (b) 3 times, using 3 different splits of the observations into a training set and a validation set.  Comment on the results obtained.  
+
+The validation set error changes depending on how the data was split into the 2 sets.  There is wild fluctuations in the validation set error relative to the scale of the numbers.  
+```{r}
+set.seed(400)
+for(i in 1:3){
+  train <- sample(obs, obs/2, replace=FALSE)
+  Default.copy <- Default
+  Default.copy$default <- as.numeric(Default.copy$default == 'Yes') # 1 = 'Yes'
+  fit.log <- glm(default~income+balance, data=Default.copy, family="binomial", subset=train)
+  probs <- predict(fit.log, Default[-train,], type='response')
+  pred <- rep(0, length(probs))
+  pred[probs > .5] <- 1
+  mis <- pred != Default.copy$default[-train]
+  cat(mean(mis), '\n')
+}
+```
+
+## (d)
+Now consider a logistic regression model that predicts the probability of default using income, balance, and a dummy variable for student.  Estimate the test error for this model using the validation set approach.  Comment on whether or not including a dummy variable for student leads to a reduction in the test error rate.  
+
+I used the same seed to ensure that the split in the data was the same as the split in part c.  The results indicate that the validation set error rate is the same.  This implies that the model with the student dummy variable does not affect the model.  
+```{r}
+set.seed(400)
+for(i in 1:3){
+  train <- sample(obs, obs/2, replace=FALSE)
+  Default.copy <- Default
+  Default.copy$default <- as.numeric(Default.copy$default == 'Yes') # 1 = 'Yes'
+  fit.log <- glm(default~., data=Default.copy, family="binomial", subset=train)
+  probs <- predict(fit.log, Default[-train,], type='response')
+  pred <- rep(0, length(probs))
+  pred[probs > .5] <- 1
+  mis <- pred != Default.copy$default[-train]
+  cat(mean(mis), '\n')
+}
+
+```
+
+# Extra 39
+In this problem, we use the Advertising data.  We want to predict Sales from TV, Radio, and Newspaper, using multiple regression (no interaction terms, no polynomial terms).  Make 3 models with exactly one predictor, 3 with exactly 2 predictors, and 1 with all 3 predictors.
+```{r, include=FALSE}
+ads <- read.csv("Advertising.csv")
+head(ads)
+```
+
+## (a)
+Make all 7 models.  Do not show the summaries.
+```{r}
+fit.lm.1 <- lm(sales~TV, data=ads)
+fit.lm.2 <- lm(sales~radio, data=ads)
+fit.lm.3 <- lm(sales~newspaper, data=ads)
+fit.lm.4 <- lm(sales~TV+radio, data=ads)
+fit.lm.5 <- lm(sales~TV+newspaper, data=ads)
+fit.lm.6 <- lm(sales~radio+newspaper, data=ads)
+fit.lm.7 <- lm(sales~TV+radio+newspaper, data=ads)
+```
+
+##(b)
+There are 6 ways to nest these models from smallest (only 1 predictor) to largest (all 3 predictors).  Carry out ANOVA comparisons for all 6 ways.
+```{r}
+anova(fit.lm.1, fit.lm.4, fit.lm.7)
+```
+
+```{r}
+anova(fit.lm.1, fit.lm.5, fit.lm.7)
+```
+
+```{r}
+anova(fit.lm.2, fit.lm.4, fit.lm.7)
+```
+
+```{r}
+anova(fit.lm.2, fit.lm.6, fit.lm.7)
+```
+
+```{r}
+anova(fit.lm.3, fit.lm.5, fit.lm.7)
+```
+
+```{r}
+anova(fit.lm.3, fit.lm.6, fit.lm.7)
+```
+
+## (c)
+Summarize what you see.  Is there a predictor that typically does not improve a model significantly if it is added?  What are the models that are  always  improved significantly if another predictor is added?  Is there anything that these models have in common?
+
+Adding radio and TV variables always lead to a statistical significant increase in the fit of the model.  Adding newspaper variable to the model does not always improve a model significantly.  Adding newspaper improves the model when there is only the TV variable in the model.  The results point to the idea that TV and radio are the two best predictor variables to use in the model.  
+
+# Extra 40
+In this problem, we use the Advertising data.  We want to predict Sales from TV, Radio, and Newspaper, using multiple regression with all 3 predictors plus up to 1 interaction term of these 3 predictors ($TV \cdot radio$ or $Radio \cdot newspaper$ or $TV \cdot newspaper$).  Should such an interaction term be included?  Which one?  Try to answer this question by estimating the residual standard error using 10-fold cross validation for all 4 possible models.  
+
+The model with the interaction term $TV \cdot Radio$ should be included because that model had the lowest cv MSE and cv RSE.  
+
+```{r}
+set.seed(341)
+fit.lm.1 <- glm(sales~TV+radio+newspaper, data=ads)
+fit.lm.2 <- glm(sales~TV+radio+newspaper+TV*newspaper, data=ads)
+fit.lm.3 <- glm(sales~TV+radio+newspaper+radio*newspaper, data=ads)
+fit.lm.4 <- glm(sales~TV+radio+newspaper+TV*radio,data=ads)
+
+# 10-fold c.v. using MSE metric on training data
+temp <- list(fit.lm.1, fit.lm.2, fit.lm.3, fit.lm.4)
+for(i in temp){
+  cv.err <- cv.glm(ads, i, K=10)
+  cat(cv.err$delta[1], '\n') # delta[1] = non-bias corrected cv score.  
+}
+```
+
+```{r}
+# 10-fold c.v. using RSE metric
+cv.fit.lm.1 <- function (){
+#Randomly shuffle the data
+ads.copy <- ads[sample(nrow(ads)),]
+#Create 10 equally size folds
+folds <- cut(seq(1,nrow(ads.copy)),breaks=10,labels=FALSE)
+#Perform 10 fold cross validation
+cv.score <- rep(NA, 10)
+for(i in 1:10){
+    #Segement your data by fold using the which() function 
+    testIndexes <- which(folds==i, arr.ind=TRUE)
+    testData <- ads.copy[testIndexes,]
+    trainData <- ads.copy[-testIndexes,]
+    model <- glm(sales~TV+radio+newspaper, data=trainData)
+    pred <- predict(model, testData, type='response')
+    residuals <- (pred - testData$sales)
+    res.sq <- residuals**2
+    cv.score[i] <- sqrt(sum(res.sq)/model$df.residual)
+}
+cat(mean(cv.score))
+}
+cv.fit.lm.1()
+```
+
+```{r}
+cv.fit.lm.2 <- function (){
+#Randomly shuffle the data
+ads.copy <- ads[sample(nrow(ads)),]
+#Create 10 equally size folds
+folds <- cut(seq(1,nrow(ads.copy)),breaks=10,labels=FALSE)
+#Perform 10 fold cross validation
+cv.score <- rep(NA, 10)
+for(i in 1:10){
+    #Segement your data by fold using the which() function 
+    testIndexes <- which(folds==i, arr.ind=TRUE)
+    testData <- ads.copy[testIndexes,]
+    trainData <- ads.copy[-testIndexes,]
+    model <- glm(sales~TV+radio+newspaper+TV*newspaper, data=trainData)
+    pred <- predict(model, testData, type='response')
+    residuals <- (pred - testData$sales)
+    res.sq <- residuals**2
+    cv.score[i] <- sqrt(sum(res.sq)/model$df.residual)
+}
+cat(mean(cv.score))
+}
+cv.fit.lm.2()
+```
+
+```{r}
+cv.fit.lm.3 <- function (){
+#Randomly shuffle the data
+ads.copy <- ads[sample(nrow(ads)),]
+#Create 10 equally size folds
+folds <- cut(seq(1,nrow(ads.copy)),breaks=10,labels=FALSE)
+#Perform 10 fold cross validation
+cv.score <- rep(NA, 10)
+for(i in 1:10){
+    #Segement your data by fold using the which() function 
+    testIndexes <- which(folds==i, arr.ind=TRUE)
+    testData <- ads.copy[testIndexes,]
+    trainData <- ads.copy[-testIndexes,]
+    model <- glm(sales~TV+radio+newspaper+radio*newspaper, data=trainData)
+    pred <- predict(model, testData, type='response')
+    residuals <- (pred - testData$sales)
+    res.sq <- residuals**2
+    cv.score[i] <- sqrt(sum(res.sq)/model$df.residual)
+}
+cat(mean(cv.score))
+}
+cv.fit.lm.3()
+```
+
+```{r}
+cv.fit.lm.4 <- function (){
+#Randomly shuffle the data
+ads.copy <- ads[sample(nrow(ads)),]
+#Create 10 equally size folds
+folds <- cut(seq(1,nrow(ads.copy)),breaks=10,labels=FALSE)
+#Perform 10 fold cross validation
+cv.score <- rep(NA, 10)
+for(i in 1:10){
+    #Segement your data by fold using the which() function 
+    testIndexes <- which(folds==i, arr.ind=TRUE)
+    testData <- ads.copy[testIndexes,]
+    trainData <- ads.copy[-testIndexes,]
+    model <- glm(sales~TV+radio+newspaper+TV*radio, data=trainData)
+    pred <- predict(model, testData, type='response')
+    residuals <- (pred - testData$sales)
+    res.sq <- residuals**2
+    cv.score[i] <- sqrt(sum(res.sq)/model$df.residual)
+}
+cat(mean(cv.score))
+}
+cv.fit.lm.4()
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

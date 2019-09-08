@@ -1,0 +1,339 @@
+---
+title: "HW6"
+author: "Norman Hong"
+date: "April 2, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 2 
+For parts (a) through (c), indicate which of i. through iv. is correct.  Justify your answer.
+
+## (a) 
+The lasso, relative to least squares, is:
+
+### (i)
+More flexible and hence will give improved prediction accuracy when its increased in bias is less than its decrease in variance.  
+
+False.  The Lasso is known to make a model more sparse.  Therefore, it makes sense to believe that it is less flexible.  As flexibility increases, the bias will always decrease.  As the flexibility increases, the variance will always increase.  
+
+### (ii)
+More flexible and hence will give improved prediction accuracy when its increase in variance is less than its decrease in bias.  
+
+False.  The Lasso is known to make a model more sparse.  Therefore, it makes sense to believe that it is less flexible.  As flexibility increases, the bias will always decrease.  As the flexibility increases, the variance will always increase.  
+
+### (iii)
+Less flexible and hence will give improved prediction accuracy when its increase in bias is less than its decrease in variance.
+
+True.  As flexibility decreases, the bias will always increase.  As flexibility decreases, the variance will always decrease.  Therefore, the MSE will decrease if the increase in bias is less than the decrease in variance.  MSE is equal to the sum of the bias and variance. 
+
+### (iv)
+Less flexible and hence will give improved prediction accuracy when its increase in variance is less than its decrease in bias.  
+
+As flexibility decreases, the variance will always decrease.  Therefore, this is false.  
+
+## (b)
+Repeat (a) for ridge regression relative to least squares.  
+
+### (i)
+More flexible and hence will give improved prediction accuracy when its increased in bias is less than its decrease in variance.  
+
+False.  Ridge regressions are less flexible than least squares regression.  Therefore, the variance will decrease as flexibility decreases, and the bias will increase as the flexibility decreases.  
+
+### (ii)
+More flexible and hence will give improved prediction accuracy when its increase in variance is less than its decrease in bias. 
+
+False.   Ridge regressions are less flexible than leat squares regression.  
+
+### (iii)
+Less flexible and hence will give improved prediction accuracy when its increase in bias is less than its decrease in variance.
+
+Ridge regressions are less flexible than least squares regression.  Therefore, the variance will decrease as flexibility decreases, and the bias will increase as the flexibility decreases.  MSE is equal to the sum of bias and flexibiltiy.  Therefore, if the increase in bias is less than the decrease in variance, the MSE will have an overall net decrease.  Therefore, true. 
+
+
+### (iv)
+Less flexible and hence will give improved prediction accuracy when its increase in variance is less than its decrease in bias.  
+
+False.  Ridge regressions are less flexible than least squares regression.  Therefore, the variance will decrease as flexibility decreases, and the bias will increase as the flexibility decreases. 
+
+
+# Extra 50
+Work with the diabetes data, which are available as an .RData workspace in Canvas.  We want to predict y from the 64 variables in the matrix x2.  
+Combine y and x2 in a data frame.  It should have 442 observations and 65 columns.  
+```{r include=FALSE}
+load("diabetes.Rdata")
+x2 <- as.data.frame.matrix(diabetes$x2)
+data <- data.frame(y=diabetes$y, x2=x2)
+library(glmnet)
+```
+Use ridge regression and 10-fold cross validation to come up with a good model to predict y.  Be sure to set the random seed before doing the cross validation. 
+
+## (a)
+Plot the mean squared error estimates and report $\lambda_{1SE}$
+
+The largest lambda such that it is within 1 standard deviation of the lowest lambda is 13.66
+```{r}
+set.seed(100)
+y <- data$y
+x <- model.matrix(y~., data)[,-1] # -1 removes intercept
+train <- sample(1:nrow(x), nrow(x)/2)
+test <- (-train)
+cv.out <- cv.glmnet(x[train,], y[train])
+plot(cv.out)
+```
+```{r}
+bestlam <- cv.out$lambda.1se
+bestlam
+```
+
+## (b)
+What is the RMS prediction error according to cross validation for this $\lambda$?
+
+The test RMS is 59.02
+```{r}
+grid=10^seq(10, -2, length=100)
+ridge.mod <- glmnet(x[train,], y[train], alpha=0, lambda=grid, thresh=1e-12)
+ridge.pred <- predict(ridge.mod, s=bestlam, newx=x[test,])
+
+sqrt(mean((ridge.pred-y[test])^2))
+```
+
+
+# 4
+Suppose we estimate the regression coefficients in a linear regression model by minimizing the shrinkage penalty for a ridge regression for a particular value of $\lambda$.  For parts (a) through (e), indicate which of i. through v. is correct.  Justify your answer.  
+
+## (a)
+As we increase $\lambda$ from 0, the training RSS will:
+
+The answer follows from looking at the optimization condition. As the tuning parameter is increased, there exist an s such that the constraint region becomes smaller because s becomes smaller.  This means that the RSS will increase steadily.  
+
+## (b)
+Repeat (a) for test RSS.
+
+Decrease initially, and then eventually start increasing in a U shape.  Increasing tuning parameter first fixes the overfitting by lowering the coefficients.  This will lead to a decrease in test RSS.  As the tunning parameter continues to increase even more, eventually we will reach underfitting, so the test RSS will increase.
+
+## (c)
+Repeat (a) for variance.
+
+THe variance will decrease steadily as tuning parameter increases because coefficients all tend towards 0.  
+
+
+# (9)
+In this exercise, we will predict the number of applications received using the other variables in the college data set. 
+```{r}
+library(ISLR)
+data("College")
+```
+## (a)
+Split the data into a training set and a test set.  
+```{r}
+set.seed(100)
+y <- College$Apps
+x <- model.matrix(Apps~., College)[,-1] # -1 removes intercept
+train <- sample(1:nrow(x), nrow(x)/2)
+test <- (-train)
+```
+
+## (b)
+Fit a linear model using least squares on the training set, and report the test error obtained.
+
+The test MSE for a linear model is 1,355,557.  
+```{r}
+y.test <- y[test]
+lin.mod <- lm(Apps~., College[train,])
+lin.pred <- predict(lin.mod, College[test,], type='response')
+mean((y.test-lin.pred)^2)
+```
+
+## (c)
+Fit a ridge regression model on the training set, with $\lambda$ chosen by cross-validation.  Report the test error obtained.  
+
+The test MSE obtained is 2,261,965.  
+```{r}
+set.seed(100)
+grid <- 10^seq(10, -2, length=100)
+ridge.mod <- glmnet(x[train,], y[train], alpha=0, lambda=grid)
+cv.out <- cv.glmnet(x[train,], y[train], alpha=0)
+bestlam <- cv.out$lambda.min
+ridge.pred <- predict(ridge.mod, s=bestlam, newx=x[test,])
+mean((ridge.pred - y.test)^2)
+```
+
+## (d)
+Fit a lasso model on the training set, with $\lambda$ chosen by cross-validation.  Report the test error obtained, along with the number of non-zero coefficient estimates.  
+
+The test MSE is found to be 1,425,526.  The number of non-zero coefficients are 14.  (not including the intercept)
+```{r}
+set.seed(100)
+lasso.mod <- glmnet(x[train,], y[train], alpha=1, lambda=grid)
+cv.out <- cv.glmnet(x[train,], y[train], alpha=1)
+bestlam <- cv.out$lambda.min
+lasso.pred <- predict(lasso.mod, s=bestlam, newx=x[test,])
+mean((lasso.pred-y.test)^2)
+
+out <- glmnet(x, y, alpha=1)
+lasso.coef <- predict(out, type='coefficients', s=bestlam)[1:18,]
+lasso.coef
+```
+
+# Extra 49
+Consider the Boston data.  We want to predict medv from all other predictors, using the LASSO.
+```{r include=FALSE}
+library(MASS)
+data('Boston')
+```
+## (a)
+Set up the LASSO and plot the trajectories of all coefficients.  What are the last five variables to remain in the model?
+
+The last 5 remaining variables are chas, rm, ptratio, black, and lstat.
+```{r}
+set.seed(100)
+y <- Boston$medv
+x <- model.matrix(medv~., Boston)[,-1] # -1 removes intercept
+train <- sample(1:nrow(x), nrow(x)/2)
+test <- (-train)
+y.test <- y[test]
+```
+
+```{r}
+grid <- 10^seq(10, -2, length=100)
+lasso.mod <- glmnet(x[train,], y[train], alpha=1, lambda=grid)
+plot(lasso.mod, xvar='lambda')
+```
+```{r}
+out <- glmnet(x, y, alpha=1, lambda=grid)
+lasso.coef <- predict(out, type='coefficients', s=.9)
+lasso.coef
+```
+
+## (b)
+Find the 1SE value of $\lambda$, using 10-fold cross-validation.  What is the cross validation estimate for the residual standard error?
+
+The cross validation estimate for the residual standard error is 28.23.
+```{r}
+cv.out <- cv.glmnet(x[train,], y[train], alpha=1)
+bestlam <- cv.out$lambda.1se
+
+lasso.mod <- glmnet(x[train,], y[train], alpha=1, lambda=bestlam)
+lasso.pred <- predict(lasso.mod, s=bestlam, newx=x[test,])
+sqrt(sum((lasso.pred- y.test)**2)/lasso.mod$df)
+```
+
+
+## (c)
+Rescale all predictors so that their mean is 0 and their standard deviation is 1.  Then set up the LASSO and plot the trajectories of all coefficients.  What are the last 5 variables to remain in the model? Compare your answer to part a.  
+
+The last 5 remaining variables are chas, rm, ptratio, black, and lstat.  The variables are the same as those in part a.  
+```{r}
+# Standarizing to mean 0 and sd 1
+x.sd <- x
+for (j in 1:13){
+    x.sd[,j] <- (x[,j]-mean(x[,j]))/sd(x[,j])
+}
+```
+```{r}
+lasso.mod <- glmnet(x.sd[train,], y[train], alpha=1, lambda=grid)
+plot(lasso.mod, xvar='lambda')
+```
+```{r}
+out <- glmnet(x.sd, y, alpha=1, lambda=grid)
+lasso.coef <- predict(out, type='coefficients', s=.9)
+lasso.coef
+```
+
+## (d)
+Find the 1SE value of $\lambda$, using 10-fold cross-validation.  What is the cross validation estimate for the residual standard error now?  Does rescaling lead to a better performing model?
+
+The cross validation estimate for the test residual standard error is 23.04.  Rescaling lead to a lower estimated residual standard error.  It seems that rescaling led to a slightly better model.    
+```{r}
+cv.out <- cv.glmnet(x.sd[train,], y[train], alpha=1)
+bestlam <- cv.out$lambda.1se
+
+lasso.mod <- glmnet(x.sd[train,], y[train], alpha=1, lambda=bestlam)
+lasso.pred <- predict(lasso.mod, s=bestlam, newx=x.sd[test,])
+sqrt(sum((lasso.pred- y.test)**2)/lasso.mod$df)
+
+```
+
+# 52 
+The LASSO also works for logistic models.  We can therefore use it for the MNIST image classification data, available at mnist_all.RData that were used earlier.  We want to distinguish between 1 and 8.  Extract the relevant training data and place them in a data frame.  Remove all variables (pixels) that have 0 variance, ie pixels that have the same value for both digits.  The response variable should have values 0 (for digit = 1) and 1 (for digit = 8).
+
+```{r include=FALSE}
+load("C:/Users/Norman/Desktop/Code_repo/notes/ANLY-512/week4/mnist_all.RData")
+```
+
+```{r}
+train.x <- train$x[(train$y == 1) | (train$y == 8),]
+train.y <- train$y[train$y == 1 | train$y == 8]
+train.y <- as.numeric(train.y == 8) # Class 1 = 8; class 0 = 1
+
+test.x <- test$x[(test$y == 1) | (test$y == 8),]
+test.y <- test$y[test$y == 1 | test$y == 8]
+test.y <- as.numeric(test.y == 8)
+vars <- apply(train.x, MARGIN=2, var)
+var.0 <- vars != 0
+train.x <- train.x[,var.0]
+vars <- apply(test.x, MARGIN=2, var)
+var.0 <- vars != 0
+test.x <- test.x[,var.0]
+
+train.df <- data.frame(train.x, y=train.y)
+test.df <- data.frame(test.x, y=test.y)
+```
+
+```{r}
+x.model.train <- model.matrix(y~., train.df)[,-1] # -1 removes intercept
+x.model.test <- model.matrix(y~., test.df)[,-1]
+```
+## (a)
+Apply the LASSO and plot the results (trajectories against $\lambda$).  There are several hundred trajectories, which is not helpful.
+
+```{r}
+grid <- 10^seq(5, -2, length=100)
+lasso.mod <- glmnet(x.model.train, as.factor(train.y), alpha=1, family='binomial')
+plot(lasso.mod, xvar='lambda')
+```
+
+## (b)
+Identify the last 10 variables that leave the model.  Determine in which order they leave the model.  
+
+The last 10 variables that leave the model are 149, 174, 175, 201, 205, 228, 254, 261, 281, 307.  174 leaves first.  Then its 201.  Then 307.  Then 228 and 175.  Then the rest leave at the same time.  
+```{r}
+max(which(lasso.mod$df == 10)) # returns tuning parameter that corresponds to 10 variables left that are non-zero
+```
+```{r}
+# last 10 variables
+lasso.mod$beta[,7][lasso.mod$beta[,7] !=0]
+```
+```{r}
+lasso.mod$beta[,6][lasso.mod$beta[,6] !=0]
+```
+```{r}
+lasso.mod$beta[,5][lasso.mod$beta[,5] !=0]
+```
+```{r}
+lasso.mod$beta[,4][lasso.mod$beta[,4] !=0]
+```
+```{r}
+lasso.mod$beta[,3][lasso.mod$beta[,3] !=0]
+```
+```{r}
+lasso.mod$beta[,2][lasso.mod$beta[,2] !=0]
+```
+```{r}
+lasso.mod$beta[,1][lasso.mod$beta[,1] !=0]
+```
+
+## (c)
+Find a way to make a trajectory plot of the coefficietns only for the last 10 variables that leave the model.
+```{r}
+plot(lasso.mod$beta[lasso.mod$beta[,7] !=0])
+```
+
+
+
+
+

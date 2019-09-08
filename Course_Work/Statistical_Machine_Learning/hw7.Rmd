@@ -1,0 +1,380 @@
+---
+title: "HW7"
+author: "Norman Hong"
+date: "April 17, 2019"
+output: pdf_document
+---
+```{r include=FALSE}
+library(randomForest)
+```
+
+# Book 4
+This question relates to the plots in Figure 8.12.
+
+## (a)
+Sketch the tree corresponding to the partition of the predictor space illustrated in the left-hand panel of Figure 8.12.  The numbers inside the boxes indicate the mean of Y within each region.  
+
+If $X_1 \geq 1$ then 5, else if $X_2 \geq 1$ then 15, else if $X_1 < 0$ then 3, else if $X_2 < 0$ then 10, else 0.
+Look to the last page for tree diagram.  
+
+## (b)
+Create a diagram similar to the left-hand panel of Figure 8.12, using the t ree illustrated in the right-hand panel of the same figure.  You should divide up the predictor space into the correct regions, and indicate the mean for each region.
+
+```{r include=FALSE}
+par(xpd = NA)
+plot(NA, NA, type = "n", xlim = c(-2, 2), ylim = c(-3, 3), xlab = "X1", ylab = "X2")
+# X2 < 1
+lines(x = c(-2, 2), y = c(1, 1))
+# X1 < 1 with X2 < 1
+lines(x = c(1, 1), y = c(-3, 1))
+text(x = (-2 + 1)/2, y = -1, labels = c(-1.8))
+text(x = 1.5, y = -1, labels = c(0.63))
+# X2 < 2 with X2 >= 1
+lines(x = c(-2, 2), y = c(2, 2))
+text(x = 0, y = 2.5, labels = c(2.49))
+# X1 < 0 with X2<2 and X2>=1
+lines(x = c(0, 0), y = c(1, 2))
+text(x = -1, y = 1.5, labels = c(-1.06))
+text(x = 1, y = 1.5, labels = c(0.21))
+```
+
+
+# Extra 61
+
+Consider the concrete strength data from Extra 37.  There are eight numerical predictors and one numerical response.  
+```{r include=FALSE}
+concrete = read.csv('Concrete_Data.csv')
+colnames(concrete) = c('x1','x2','x3','x4','x5','x6','x7','x8','y')
+```
+## (a)
+
+Fit a random forest to the data to predict strength.  Estimate the rms prediction error using 10-fold cross validation.  you will have to write your own cross validation code to do this.  
+```{r}
+# Have to pass concrete data set as argument.  
+cv.randomForest <- function(concrete){
+     # Randomly shuffle data
+    concrete <- concrete[sample(nrow(concrete)),]
+    
+    # Create 10 equally size folds
+    folds <- cut(seq(1, nrow(concrete)), breaks=10, labels=FALSE)
+    
+    rmse <- c()
+    # Perform 10 fold cross validation
+    for (i in 1:10){
+        # segment data by fold integer
+        testIndex <- which(folds==i, arr.ind=TRUE)
+        testData <- concrete[testIndex,]
+        trainData <- concrete[-testIndex,]
+        rf.concrete <- randomForest(y~.,mtry=4, data=trainData)
+        pred <- predict(rf.concrete, newdata=testData)
+        rmse[i] <- sqrt(mean((pred-testData$y)^2))
+    }
+    cat(mean(rmse)) 
+}
+```
+```{r}
+set.seed(100)
+cv.randomForest(concrete)
+```
+
+## (b)
+
+Make a variable importance plot for a r andom forest model for the full data
+```{r}
+# %IncMSE is based on the mean decrease of accuracy in predictions on the out of bag samples
+# when the variable is excluded from the model.
+# IncNodePurity is the total decrease in node impurity (not purity) that results from
+# splits over that variable averaged over all trees.  
+rf.concrete <- randomForest(y~., mtry=4, data=concrete, importance=TRUE)
+varImpPlot(rf.concrete)
+
+```
+
+## (c)
+
+Leave out the least important predictor and repeat part a.  How does the estimated rms prediction error change? Comment on your observation.  
+
+The estimated rmse predition error increase slightly from 4.787 to 4.805.  This slight increase in rmse is not terrible since  the model is simplier.  
+```{r}
+# Have to pass concrete data set as argument.  
+cv.randomForest <- function(concrete){
+     # Randomly shuffle data
+    concrete <- concrete[sample(nrow(concrete)),]
+    
+    # Create 10 equally size folds
+    folds <- cut(seq(1, nrow(concrete)), breaks=10, labels=FALSE)
+    
+    rmse <- c()
+    # Perform 10 fold cross validation
+    for (i in 1:10){
+        # segment data by fold integer
+        testIndex <- which(folds==i, arr.ind=TRUE)
+        testData <- concrete[testIndex,]
+        trainData <- concrete[-testIndex,]
+        rf.concrete <- randomForest(y~x1+x2+x3+x4+x5+x7+x8,mtry=4, data=trainData)
+        pred <- predict(rf.concrete, newdata=testData)
+        rmse[i] <- sqrt(mean((pred-testData$y)^2))
+    }
+    cat(mean(rmse)) 
+}
+```
+```{r}
+set.seed(100)
+cv.randomForest(concrete)
+```
+
+# Extra 62
+
+Consider the concrete strength data from problem 37.  There are 8 numerical predictors and 1 numerical response.  Load the data and split them into a training and test set (70%/30%).  
+
+Fit a gbm model to the training data to predict strength, for several choices of n.trees, shrinkage, and interaction.depth.  Compute the rms prediction errors for the training and the test sets in each case and demonstrate that it is possible to overfit with this method.  
+```{r include=FALSE}
+library(gbm)
+```
+
+```{r}
+boost.trees <- function(concrete, trees, int.dep, shrink){
+    trainIndex <- sample(nrow(concrete), .7*nrow(concrete), replace=FALSE)
+    testIndex <- -trainIndex
+    set.seed(100)
+    boost.concrete <- gbm(y~., data=concrete[trainIndex,], distribution='gaussian', n.trees=trees, interaction.depth=int.dep,    shrinkage=shrink)
+    
+    #test RMSE
+    pred <- predict(boost.concrete, newdata=concrete[testIndex,], n.trees=trees)
+    cat('test RMSE for', trees, 'trees is', sqrt(mean((pred-concrete[testIndex,]$y)^2)))
+    
+    #train RMSE
+    pred <- predict(boost.concrete, newdata=concrete[trainIndex,], n.trees=trees)
+    cat('\ntrain RMSE for', trees, 'trees is', sqrt(mean((pred-concrete[trainIndex,]$y)^2)))
+}
+```
+
+```{r}
+boost.trees(concrete, 100,4,.02)
+```
+```{r}
+boost.trees(concrete, 100, 4, .001)
+```
+```{r}
+boost.trees(concrete, 100, 20, .0001)
+```
+
+
+# Book 7
+In the lab, we applied random forests to the Boston data set using mtry=6 and using ntree=25 and ntree=500.  Create a plot displaying the test error resulting from random forests on this data set for a more comprehensive range of values for mtry and ntree.  You can model your plot after Figure 8.10.  Describe the results obtained.  
+
+The optimal value of mtry is not at the extremes, 13 or 1.  It turns out that it is somewhere in between because the test MSE is lower than the test MSE for when mtry is either 13 or 1.  
+```{r include=FALSE}
+library(randomForest)
+library(MASS)
+```
+
+```{r}
+set.seed(100)
+train <- sample(1:nrow(Boston), nrow(Boston)/2, replace=FALSE)
+forest.Boston1 <- randomForest(medv~., data=Boston[train,],xtest=Boston[-train, c(1:13)],
+                              ytest=Boston[-train,'medv'], mtry=13, ntree=3000)
+forest.Boston2 <- randomForest(medv~., data=Boston[train,],xtest=Boston[-train, c(1:13)],
+                              ytest=Boston[-train,'medv'], mtry=10, ntree=3000)
+forest.Boston3 <- randomForest(medv~., data=Boston[train,],xtest=Boston[-train, c(1:13)],
+                              ytest=Boston[-train,'medv'], mtry=6, ntree=3000)
+forest.Boston4 <- randomForest(medv~., data=Boston[train,],xtest=Boston[-train, c(1:13)],
+                              ytest=Boston[-train,'medv'], mtry=1, ntree=3000)
+forest.Boston5 <- randomForest(medv~., data=Boston[train,],xtest=Boston[-train, c(1:13)],
+                              ytest=Boston[-train,'medv'], mtry=5, ntree=3000)
+forest.Boston6 <- randomForest(medv~., data=Boston[train,],xtest=Boston[-train, c(1:13)],
+                              ytest=Boston[-train,'medv'], mtry=4, ntree=3000)
+forest.Boston7 <- randomForest(medv~., data=Boston[train,],xtest=Boston[-train, c(1:13)],
+                              ytest=Boston[-train,'medv'], mtry=3, ntree=3000)
+forest.Boston8 <- randomForest(medv~., data=Boston[train,],xtest=Boston[-train, c(1:13)],
+                              ytest=Boston[-train,'medv'], mtry=8, ntree=3000)
+
+plot(forest.Boston1, main='Random Forest', log='y', col='blue', ylim=c(7,25))
+lines(x=c(1:forest.Boston2$ntree), y=forest.Boston2$test$mse, type='l', col='green')
+lines(x=c(1:forest.Boston3$ntree), y=forest.Boston3$test$mse, type='l')
+lines(x=c(1:forest.Boston5$ntree), y=forest.Boston5$test$mse, type='l')
+lines(x=c(1:forest.Boston6$ntree), y=forest.Boston6$test$mse, type='l')
+lines(x=c(1:forest.Boston7$ntree), y=forest.Boston7$test$mse, type='l')
+lines(x=c(1:forest.Boston8$ntree), y=forest.Boston8$test$mse, type='l')
+lines(x=c(1:forest.Boston4$ntree), y=forest.Boston4$test$mse, type='l', col='red')
+
+```
+
+# Book 9
+This problem involves the OJ data set which is part of the ISLR package.  
+```{r include=FALSE}
+library(ISLR)
+library(tree)
+```
+
+## (a)
+
+Creating a training set containing a random sample of 800 observations, and a test set containing the remaining observations.
+```{r}
+set.seed(100)
+trainIdx <- sample(nrow(OJ), .7*nrow(OJ))
+trainData <- OJ[trainIdx,]
+testData <- OJ[-trainIdx,]
+```
+
+## (b)
+
+Fit a tree to the training data, with Purchase as the response and the other variables except for buy as predictors.  Use the summary() function to produce summary statistics about the tree, and describe the results obtained.  What is the training error rate?  How many terminal nodes does the tree have?
+
+The number of terminal nodes is 9.  The training error rate (misclassification rate) is 16.4%.  
+```{r}
+set.seed(100)
+tree.oj <- tree(Purchase~., data=trainData)
+summary(tree.oj)
+```
+
+## (c)
+
+Type in the name of the tree object in order to get a detailed text output.  Pick one of the terminal nodes, and interpret the information displayed.  
+
+node 4 is a terminal node that had the split condition LoyalCH less than .0356.  The number of observations in this terminal node is 55.  The deviance of this node is 0.  Every observation in this node is assigned to be MM.  Lastly, the distribution of this node is 1 MM and 0 CH.  
+```{r}
+tree.oj
+```
+
+## (d)
+Create a plot of the tree, and interpret the results.  
+
+There are 8 total splits in the decision tree.  Only 4 different predictor variables were used as split conditions.   
+```{r}
+plot(tree.oj)
+text(tree.oj, pretty=0)
+```
+
+## (e)
+Predict the response on the test data, and produce a confusion matrix comparing the test labels to the predicted test labels.  What is the test error rate?
+
+The test misclassification error is 19%.
+```{r}
+pred <- predict(tree.oj, testData, type='class')
+cm <- table(pred, testData$Purchase)
+cm
+(cm[3]+cm[2])/(sum(cm))
+```
+
+## (f)
+Apply the cv.tree() function to the training set in order to determine the optimal tree size.  
+
+```{r}
+cv.oj <- cv.tree(tree.oj, FUN=prune.misclass) # prune.misclass means to use classification error to determine prune.
+```
+
+## (g)
+Produce a plot with tree size on the x-axis and cross-validate classification error rate on the y-axis. 
+
+```{r}
+plot(x=cv.oj$size, y=cv.oj$dev, type='b', xlab='tree size', ylab='cross-validate classification error')
+```
+
+## (h)
+Which tree size corresponds to the lowest cross-validate classification error rate?
+
+The tree size with the lowest cross-validate classification error is 7 and 9.  However, there is not much difference between cross-validate classification error of tree size 4 and tree size 7.  Therefore, it might be best to use tree size 4.  
+
+## (i)
+Produce a pruned tree corresponding to the optimmal tree size obtained using cross-validation.  If cross-validation does not lead to selection of a pruned tree, then create a pruned tree with 5 terminal nodes.
+
+```{r}
+prune.oj <- prune.misclass(tree.oj, best=4)
+plot(prune.oj)
+text(prune.oj, pretty=0)
+```
+
+## (j)
+Compare the training error rates between the pruned and unpruned tree.  Which is higher?
+
+The training misclassification error rate is 16.4% for the unpruned tree, and 16.69% for pruned tree.  The pruned tree has a higher error rate.   
+```{r}
+summary(tree.oj)
+summary(prune.oj)
+```
+
+## (k)
+Compare the test error rates between the pruned and unpruned trees.  WHich is higher?
+
+The test error rate for unpruned tree was found to be 19% earlier.  The test error rate for pruned tree is 18.69%. The test error rate for unpruned tree is slightly higher.     
+```{r}
+pred <- predict(prune.oj, testData, type='class')
+cm <- table(pred, testData$Purchase)
+cm
+(cm[3]+cm[2])/(sum(cm))
+```
+
+# Extra 59
+This problem uses the MNIST image classificatio ndata, available as mnist_all.RData that were used earlier.  We want to distinguish between 4 and 5.  
+```{r include=FALSE}
+load("C:/Users/Norman/Desktop/Code_repo/notes/ANLY-512/week4/mnist_all.RData")
+
+```
+
+```{r}
+train.x <- train$x[(train$y == 4) | (train$y == 5),]
+train.y <- train$y[train$y == 4 | train$y == 5]
+train.y <- as.factor(as.numeric(train.y == 4)) # Class 1 = 4; class 0 = 5
+
+test.x <- test$x[(test$y == 4) | (test$y == 5),]
+test.y <- test$y[test$y == 4 | test$y == 5]
+test.y <- as.factor(as.numeric(test.y == 4))
+#vars <- apply(train.x, MARGIN=2, var)
+#var.0 <- vars != 0
+#train.x <- train.x[,var.0]
+#vars <- apply(test.x, MARGIN=2, var)
+#var.0 <- vars != 0
+#test.x <- test.x[,var.0]
+
+train.df <- data.frame(train.x, y=train.y)
+test.df <- data.frame(test.x, y=test.y)
+```
+
+## (a)
+Fit a tree model to the training data and assess its accuracy (prediction error) using the test data.  Be sure to make a classification tree and to predict a class, not a numerical value.  
+
+The test prediction error rate is 3.3%.  
+```{r}
+set.seed(100)
+tree.mnist <- tree(y~., data=train.df)
+pred <- predict(tree.mnist, newdata=test.df, type='class')
+
+cm <- table(pred, test.df$y)
+
+(cm[2] + cm[3])/sum(cm)
+```
+
+## (b)
+Fit a random forest model to the training data.  Choose the number of trees such that the algorithm runs no longer than 5 minutes.  Then assess the accuracy (prediction error) using the test data.
+
+The test misclassification error rate is .16%.  
+```{r}
+set.seed(100)
+forest.mnist <- randomForest(y~., data=train.df, mtry=5, ntree=200)
+```
+```{r}
+pred <- predict(forest.mnist, newdata=test.df, type='class')
+cm <- table(pred, test.df$y)
+cm
+(cm[2] + cm[3])/sum(cm)
+```
+
+## (c)
+Fit a bagging model to the training data, using the same number of trees as in part b.  Assess the accuracy (prediction error) using the test data.  
+
+The prediction error is .53%.  
+```{r}
+set.seed(100)
+bagging.mnist <- randomForest(y~., data=train.df, mtry=784, ntree=200)
+```
+```{r}
+pred <- predict(bagging.mnist, newdata=test.df, type='class')
+cm <- table(pred, test.df$y)
+(cm[2] + cm[3])/sum(cm)
+```
+
+## (d)
+Comment on your observations.  How many trees were you able to simulate?  How accurate are the three methods?
+
+200 trees were simulated for bagging and random forest models.  The least accurate model is the single decision tree model.  The most accurate model is the random forest.  

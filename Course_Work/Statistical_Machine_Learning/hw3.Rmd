@@ -1,0 +1,309 @@
+---
+title: "HW3"
+author: "Norman Hong"
+date: "February 21, 2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+load("C:/Users/Norman/Desktop/Code_repo/notes/ANLY-512/week4/mnist_all.RData")
+library("nnet")
+library("pROC")
+concrete <- read.csv("C:/Users/Norman/Desktop/Code_repo/notes/ANLY-512/Concrete_Data.csv")
+```
+
+Number 28 is at the end of this document.  
+
+# Extra 30
+Suppose two different ANNs have been trained on a training set for a classification problem, and the responses, scaled to have values in [0,1], have been computed for all training instances for both networks.  Assume that the responses for network 2 are related to those from network 1 by a monotone function, such as in the plot in the hw pdf document.  Explain carefully why the two ANNs have the same ROC curve.
+
+A monotone function $f:x \rightarrow y$ between two topological spaces satisfies the properties for homomorphism because $f$ is a bijection, $f$ is continuous, and the inverse function of $f$ is also continuous.  This means that the predicted responses for the two different ANN models have the same topological properties, which implies that the ROC curve are the same.  Since the topological properties are preserved, the two models must have the same decision boundary.  Also, each true negatives and true positives in model 1 can be mapped to each true positives and true negatives in model 2. This implies that there is no change in the number of true positives and true negatives.  Therefore the ROC curve should be the same.  
+
+
+# Extra 34
+
+Make a dataframe with $k=11$ columns and $N=100$ observations, where all entries are independent standard normal random sample.  Let $z$ be the last column.  Use set.seed(20305).
+```{r}
+set.seed(20305)
+values <- rnorm(1100,mean=0,sd=1)
+data <- data.frame(matrix(values, nrow=100))
+names(data)[11] <- 'z'
+```
+## (a) 
+
+Fit z to the other 10 columns using multiple regression.  What is the sum of squares of the residuals?
+
+The sum of squares residuals is 98.8.  None of the estimated coefficients are statistically significant.  The F-statistic is also not statistically significant because it is less than 1.  
+```{r}
+lin.fit <- lm(z~., data=data)
+summary(lin.fit)
+```
+```{r}
+sum(residuals(lin.fit)**2)
+```
+
+## (b)
+
+Fit z to the other 10 columns using a neural network with 2 hidden units and setting maxit=2000 and decay=.01.  Does this model fit the data better?  How do you know?
+
+It doesn't make sense to compare cross entropy measure to sum of squared residuals.  Therefore, I should calculate the sum of squared residuals for this model and compare it to the multiple regression moddel.  The sum of squares residuals is 91.45.  The sum of squared residuals decreased from 98.80 to 91.45, which means that this model fits the data better than the multiple regression model.  
+```{r}
+set.seed(20305)
+nn1 <- nnet(z~., data=data, size=2, maxit=2000, decay=.01)
+```
+
+```{r}
+pred <- predict(nn1, data, type='raw')
+sum((data$z-pred)**2)
+```
+
+# (c)
+Redo this experiment with the same data and with 5 and 10 hidden units and explain what you see. 
+
+I notice that the cross entropy is at a lower value as the number of hidden units increase.  This means that the model is better optimized.  The sum of squared residuals decreased as the hidden units increased, showing the ANN model with more hidden units fit the data better. 
+```{r}
+set.seed(20305)
+nn1 <- nnet(z~., data=data, size=5, maxit=2000, decay=.01)
+```
+```{r}
+pred <- predict(nn1, data, type='raw')
+sum((data$z-pred)**2)
+```
+
+```{r}
+nn1 <- nnet(z~., data=data, size=10, maxit=2000, decay=.01)
+```
+```{r}
+pred <- predict(nn1, data, type='raw')
+sum((data$z-pred)**2)
+```
+
+# Extra 33
+
+We'll use the MINST image classification data, available at mnist_all.RData that were used in class during the last two weeks.  We want to distinguish between 4 and 7.  Extract the relevant training data and place them in a data frame.
+```{r}
+mnistTrainX <- train$x[(train$y == 4) | (train$y == 7),]
+mnistTrainY <- train$y[train$y == 4 | train$y == 7]
+# let class 1 represent number 7 and class 0 represent
+# number 4.  
+mnistTrainY <- as.numeric(mnistTrainY == 7)
+mnist <- data.frame(x=mnistTrainX, y=mnistTrainY)
+
+mnistTestX <- test$x[(test$y == 4) | (test$y == 7),]
+mnistTestY <- test$y[test$y == 4 | test$y == 7]
+# let class 1 represent number 7 and class 0 represent
+# number 4.  
+mnistTestY <- as.numeric(mnistTestY == 7)
+mnistTest <- data.frame(x=mnistTestX, y=mnistTestY)
+```
+
+## (a)
+
+Pick two features (variables) that have large variances and low correlation.  Fit a logistic regression model with these two features.  Evaluate the model with the AUC score.  
+
+variable 430 has highest variance.  The variable with the lowest correlation with this variable is 266.  The area under the curve for the training data is 0.946. The area under the curve for the test data is .9551.  There does not seem to be any evidence of overfitting.
+```{r}
+# Determine highest variance variables.
+vars <- apply(mnistTrainX, MARGIN=2, var)
+sortedHighVar <- sort(vars, decreasing=TRUE, index.return=TRUE)
+sortedHighVar$ix[1:20]
+```
+```{r}
+cor(mnistTrainX[, sortedHighVar$ix[1:20]])
+```
+```{r}
+# 430 and 266 have low correlation.  
+glm.fit <- glm(y~x.430+x.266, data=mnist, family=binomial)
+summary(glm.fit)
+```
+```{r}
+pred <- predict(glm.fit, mnist, type='response')
+auc(mnist$y, pred)
+```
+```{r}
+predTest <- predict(glm.fit, mnistTest, type='response')
+auc(mnistTest$y, predTest)
+```
+
+## (b)
+
+Create a neural net with 1 unit in the hidden layer.  Train the neural net with the same two features as the previous part and evaluate the model with AUC.  Compare the results from (a) and explain.  
+
+The AUC score for the training and test is about the same as the AUC score from the logistic model.  This makes sense because the nnet package creates single layer neural networks.  nnet also uses a logistic function as its activation function.  When we use a single node and single hidden layer, only a single logistic transformation is occuring on the linear combination on the sum of the inputs.  Then the output layer does another logistic transformation on the output from the hidden layer, which means the output behaves like a logistic regression.  The output from the hidden layer should be a single value for each observation.  
+```{r}
+set.seed(20305)
+nn1 <- nnet(y~x.430+x.266, data=mnist, size=1, decay=.1)
+```
+
+```{r}
+pred <- predict(nn1, mnist, type='raw')
+pred <- as.vector(pred)
+auc(mnist$y, pred)
+```
+```{r}
+predTest <- predict(nn1, mnistTest, type='raw')
+predTest <- as.vector(predTest)
+auc(mnistTest$y, predTest)
+```
+
+## (c)
+
+With the same two features, train three different neural nets, each time using more units in the hidden layer.  How do the results improve, using the AUC?
+
+Using more hidden units increases the AUC metric slightly.  This corresponds to models that better fit the data and more accurate models.  With 20 hidden units, it can be seen that the training AUC increased, but the test AUC decreased slightly.  This corresponds to the start of overfitting the model.  
+```{r}
+for (i in c(2, 3, 20)){
+set.seed(20305)
+nn1 <- nnet(y~x.430+x.266, data=mnist, size=i, decay=.1, maxit=200)
+pred <- predict(nn1, mnist, type='raw')
+pred <- as.vector(pred)
+cat(auc(mnist$y, pred), '\n')
+pred <- round(pred, 0)
+
+predTest <- predict(nn1, mnistTest, type='raw')
+predTest <- as.vector(predTest)
+cat(auc(mnistTest$y, predTest), '\n')
+predTest <- round(predTest, 0)
+}
+```
+
+## (d)
+
+Is there evidence for overfitting in your results in (c)?  Use the test data to find out.  
+
+There is some evidence of overfitting in the model.  With 20 hidden units, it can be seen that the training AUC increased, but the test AUC decreased slightly.  
+
+# 36
+In the Tensorflow Playground, we can use a 'bullseye' dataset to demonstrate non-linear dicision boundaries that would be impossibly difficult for logistic regression.  Here we're going to explore that kind of data set in a simplified version.
+
+A 1-dimensional bullseye dataset would be like the following.  Notice that one of the classes completely  surrounds the other.  
+```{r}
+set.seed(200)
+x <- rnorm(50, 0, 2)
+y <- rep(1, length(x))
+y[abs(x) < 1] = 0
+plot(x,rep(0, length(x)), col=y+1, ylab='')
+```
+
+## (a)
+Fit a logistic regression model to this dataset.  Verify that the results are not great.  
+
+The AUC is .64, which is not great.  It is not much better than randomly predicting the class of each observation.
+```{r}
+temp <- data.frame(x=x, y=y)
+log.fit <- glm(y~x, data=temp, family='binomial')
+summary(log.fit)
+```
+```{r}
+pred <- predict(log.fit, temp)
+auc(temp$y, pred)
+```
+
+## (b)
+But we can solve this problem using logistic regression if we employ clever 'feature engineering'.  Create a new feature which is just $x^2$.  Make a plot of the two features $x$ and $x^2$ and color by class label to verify that the two classes are now more easily separable.  Fit a logistic regression model and comment on the results.  
+
+The area under the curve is 1, which implies the model was perfect.  The logistic regression shows the following error message: fitted probabilities numerically 0 or 1 occured.  This means that the classes are perfectly separable using the predictor variables $x2$ and $x$. In other words, achieved perfect separation.
+```{r}
+temp$x2 <- temp$x**2
+plot(temp$x,temp$x2, col=y+1, xlab='x', ylab='x squared', main='plot of 2 predictors')
+```
+```{r}
+log.fit2 <- glm(y~x2+x, data=temp, family="binomial")
+pred <- predict(log.fit2, temp, type='response')
+```
+```{r}
+auc(temp$y, pred)
+```
+
+
+## (c)
+
+If we never thought of this feature engineering, we can also easily solve this problem with a neural network.  But importantly, we have to make a network topology such that the hidden layer has higher dimensionality than the input layer.  Fit a neural network to $Y~X$ with two nodes in the hidden layer.  Verify that we can achieve perfect classification on the training data.  
+
+The area under the curve for the neural network model is 1, which implies perfect classification on the training data.
+```{r}
+nn2 <- nnet(y~x, size=2, data=temp, decay=.01)
+```
+```{r}
+pred <- predict(nn2, temp, type='raw')
+pred <- as.vector(pred)
+auc(temp$y, pred)
+```
+
+## (d)
+
+By projecting the data into a higher-dimensional space, we can separate the two classes.  In the case of a neural network, the network figured it out for us - we didn't have to do it ourselves.  Provide an explanation and intuition into how the network can achieve this goal in this particular case.  Your explanation might rely on helpful visualizations.  
+
+The neural network maps the input variable x using the logistic function as the activation function.  Each input is transformed 2 times and then linearly combined in the hidden layer.  The output from hidden layer is passed to the output layer where it is transformed again using a logistic function.  It is through this mapping process that the neural network is able to discover a hyperplane that can perfectly separate the two classes.
+
+# Extra 37
+## (a)
+
+Import the data into your R workspace and change all variable names to something simpler.  Split the data into a traning set (70%) and a test set (30%). 
+```{r}
+set.seed(207)
+names(concrete) <- c('x1', 'x2', 'x3', 'x4', 'x5', 'x6', 'x7', 'x8', 'y')
+train.index <- sample(1030, .7*1030)
+concrete.train <- concrete[train.index,]
+concrete.test <- concrete[-train.index,]
+
+```
+
+## (b)
+
+Fit artificial neural networks with a single hidden layer and 2, 3, 4,..., 20 nodes to the training data.  Compute the root mean squared residuals on the test data and plot them in the same graph.  
+
+Root mean squared residuals means root mean squared error
+```{r}
+set.seed(207)
+rmse <- c()
+for(i in c(1:20)){
+  nn3 <- nnet(y~., data=concrete.train, size=i, decay=.01, maxit=1000)
+  pred <- predict(nn3, concrete.train, type='raw')
+  residuals <- (pred-concrete.train$y)
+  mse <- mean(residuals**2)
+  rmse[i] <- sqrt(mse)
+}
+```
+```{r}
+rmse
+```
+```{r}
+plot(c(1:20), rmse, xlab='index', ylab='Root mean squared error', main='Plot of Training RMSE')
+```
+
+## (c)
+For the networks in b), compute also the root mean squared residuals on the test data and plot them in the same graph.  
+```{r}
+rmseTest <- c()
+for(i in c(1:20)){
+  pred <- predict(nn3, concrete.test, type='raw')
+  residuals <- (pred-concrete.test$y)
+  mse <- mean(residuals**2)
+  rmseTest[i] <- sqrt(mse)
+}
+```
+```{r}
+plot(c(1:20), rmse, col=2, type="p", ylim=c(37,40.5), xlab='index',
+     main='Test and Training RMSE')
+points(c(1:20), rmseTest, col=3)
+legend('left', legend=c('training', 'test'), col=c(2,3), pch=1,
+  bty = "n", 
+  pt.cex = 2, 
+  cex = 1.2, 
+  text.col = "black", 
+  horiz = F , 
+  inset = c(0.1, 0.1))
+```
+
+## (d)
+Is there evidence of overfitting? How can you tell?
+
+There is a slight evidence of overfitting because the test rsme is higher than the training rmse.  
+
+## (e) 
+Do you think that the ANN is overfitting the data?
+
+Same answer as part d.

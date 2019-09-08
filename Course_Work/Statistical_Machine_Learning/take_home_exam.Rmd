@@ -1,0 +1,626 @@
+---
+title: "take-home exam"
+author: "Norman Hong"
+date: "May 4, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+load('TH_Exam2019.RData')
+```
+
+
+# Part 1 Bikeshare Ridership
+
+## Problem 1 
+
+Use numerical summaries, graphs, etc. to answer the following questions.  No model fitting or other statistical procedures are required for this.  Each graph should help answer one or more of these questions and should be accompanies by explanation.
+
+### (a)
+
+How do rideship counts depend on the year? The month? The hour of the day? How do casual and registered riders differ in this respect?
+
+It looks like total rideship increased in 2012, is slightly higher in the summer, and is higher during rush hour.  
+```{r}
+cabi$cnt <- cabi$registered + cabi$casual
+```
+
+```{r}
+# total rideshsip
+boxplot(cnt~year, data=cabi)
+boxplot(cnt~month, data=cabi)
+boxplot(cnt~hr, data=cabi)
+```
+
+
+Casual riders stayed roughly the same in 2012 when compared to 2011.  Casual riders is slightly higher in the summer than winter, and is higher in the afternoon.  
+```{r}
+# Casual Riders
+boxplot(casual~year, data=cabi)
+boxplot(casual~month, data=cabi)
+boxplot(casual~hr, data=cabi)
+```
+
+Registered riders increased in the year 2012, is slightly higher in the summer time, and peaks during rush hour.  
+```{r}
+# registered riders
+boxplot(registered~year, data=cabi)
+boxplot(registered~month, data=cabi)
+boxplot(registered~hr, data=cabi)
+```
+
+### (b)
+How are casual and registered rideship counts related?  Does this depend on the year?  Does it depend on the type of day (working day or not)?
+
+There seems to be no relationshp between registered and casual rideship based on the year.  
+```{r}
+plot(x=cabi$casual[cabi$year == 2011], y=cabi$registered[cabi$year == 2011], col='red', xlab='casual riders', ylab='registered riders')
+legend("bottomright", c("2012", "2011"), fill=c("blue","red"))
+points(x=cabi$casual[cabi$year == 2012], y=cabi$registered[cabi$year == 2012], col='blue')
+```
+
+On a working day, the relationship between registered riders and casual riders is more positive than on a non working day.  
+```{r}
+plot(x=cabi$casual[cabi$wday == 1], y=cabi$registered[cabi$wday == 1], col='red', xlab='casual riders', ylab='registerd riders')
+legend("topleft", c("Non Working Day", "Working Day"), fill=c("blue","red"))
+points(x=cabi$casual[cabi$wday == 0], y=cabi$registered[cabi$wday == 0], col='blue')
+```
+
+### (c)
+Is there an association between the weather situation and ridership counts? for casual riders? For registered riders?
+
+There is a slight decrease in total ridership when it is cloudy or foggy when compared to sunny.  There is a big decrease in total ridership when it is snowing or raining or thundering.  This trend extends to both casual riders and registered riders.  
+```{r}
+# ridership vs weather
+boxplot(cnt~weather, data=cabi)
+boxplot(casual~weather, data=cabi)
+boxplot(registered~weather, data=cabi)
+```
+
+### (d)
+There are relations between time related predictors and weather related predictors.  Demonstrate this with a few suitable graphs.  
+
+Boxplot clearly shows that temperature is higher in the summer than winter.  The humidity is higher in the monring and night time than afternoon.  The windspeed is roughly the same throughout majority of the months.  Windspeed is slightly higher in March, April, and November. 
+```{r}
+boxplot(temp~month, data=cabi)
+boxplot(hum~hr, data=cabi)
+boxplot(windspeed~month, data=cabi)
+```
+
+
+## Problem 2
+```{r}
+set.seed(100)
+trainIdx <- sample(nrow(cabi), .7*nrow(cabi), replace=FALSE)
+train.cabi <- cabi[trainIdx,]
+test.cabi <- cabi[-trainIdx,]
+```
+
+### (a) Fit a multiple regression to predict registered rideship from the other variables (excluding casual riders), using the training data.  Identify the significant variables and comment 
+
+The only non significant variables are month2, month9, month10, month12, and weather2.   
+```{r}
+lm.fit <- lm(registered~season+year+month+wday+hr+temp+atemp+hum+windspeed+weather, data=train.cabi)
+summary(lm.fit)
+
+```
+
+### (b)
+Estimate the RMS prediction error of this model using the test set.  
+
+```{r}
+pred <- predict(lm.fit, newdata=test.cabi)
+error <- pred - test.cabi$registered
+rmse <- sqrt(mean(error^2))
+rmse
+```
+
+
+### (c)
+Does the RMS prediction error depend on the month?  Answer this question using the test data and suitable tables or graphs.
+
+The RMSE increases as we go from January to August.  After August, the RMSE starts to decrease monotonically.  
+```{r}
+months <- seq(1,12,1)
+rmse <- rep(0,12)
+c <- 1
+for (month in months)
+{
+  temp <- test.cabi[test.cabi$month==month,]
+  pred <- predict(lm.fit, newdata=temp)
+  RMSE <- sqrt(mean((pred - temp$registered)^2))
+  rmse[c] <- RMSE
+  c <- c + 1
+}
+plot(rmse,type="o",col='red')
+```
+
+
+### (d)
+Make copies of the training and test data in which hr is a categorical variable.  Fit a multiple regression model.  Compare the summary of this model to the one from part (a).  Also estimate the RMS prediction error from the test set.  
+
+Month2, month10, and month12 are still non significant.  However, month2 and weather2 are now significant.  Windspeed and temp are no longer significant. All the hr variables are significant. Lastly, month3 to month6 and month 8 are not significant.  This indicates that one-hot encoding the hr variable had a big impact on the model, which is shown by the lower RMSE.  
+```{r}
+train.cabi1 <- train.cabi
+train.cabi1$hr <- as.factor(train.cabi1$hr)
+
+test.cabi1 <- test.cabi
+test.cabi1$hr <- as.factor(test.cabi1$hr)
+```
+```{r}
+lm.fit1 <- lm(registered~season+year+month+wday+hr+temp+atemp+hum+windspeed+weather, data=train.cabi1)
+summary(lm.fit1)
+```
+
+```{r}
+pred <- predict(lm.fit1, newdata=test.cabi1)
+error <- pred - test.cabi1$registered
+rms <- sqrt(mean(error^2))
+rms
+```
+
+
+## Problem 3
+Use the original cabi data for this problem. 
+
+### (a)
+Train artificial neural networks with various numbers of nodes in the hidden layer to predict registered ridership.  Use the training data and only weather related variables.  Recommend a suitable number of nodes, with explanation. 
+
+The recommended number of nodes in the single hidden layer is 3 because it is an improvement over 1 node.  There is no need to use anymore nodes because it does not improve the rms.    
+```{r include=FALSE}
+library('nnet')
+```
+```{r}
+set.seed(100)
+nn1 <- nnet(registered~temp+atemp+hum+windspeed+weather, data=train.cabi, size=100, maxit=100, decay=0, linout=TRUE, trace=F)
+# Training error.
+cat('Training RMSE:', sqrt(mean(residuals(nn1)^2)))
+# Test error
+pred <- predict(nn1, newdata=test.cabi, type='raw')
+error <- pred - test.cabi$registered
+cat('\n Test RMSE:', sqrt(mean(error**2)))
+```
+```{r}
+set.seed(100)
+nn1 <- nnet(registered~temp+atemp+hum+windspeed+weather, data=train.cabi, size=20, maxit=100, decay=.01, linout=TRUE, trace=F)
+# Training error.
+cat('Training RMSE:', sqrt(mean(residuals(nn1)^2)))
+
+# Test error
+pred <- predict(nn1, newdata=test.cabi, type='raw')
+error <- pred - test.cabi$registered
+cat('\nTest RMSE:', sqrt(mean(error**2)))
+```
+
+```{r}
+set.seed(100)
+nn1 <- nnet(registered~temp+atemp+hum+windspeed+weather, data=train.cabi, size=3, maxit=100, decay=.01, linout=TRUE, trace=F)
+# Training error.
+cat('Training RMSE:', sqrt(mean(residuals(nn1)^2)))
+
+# Test error
+pred <- predict(nn1, newdata=test.cabi, type='raw')
+error <- pred - test.cabi$registered
+cat('\nTest RMSE:', sqrt(mean(error**2)))
+```
+
+```{r}
+set.seed(100)
+nn1 <- nnet(registered~temp+atemp+hum+windspeed+weather, data=train.cabi, size=2, maxit=100, decay=.01, linout=TRUE, trace=F)
+# Training error.
+cat('Training RMSE:', sqrt(mean(residuals(nn1)^2)))
+
+# Test error
+pred <- predict(nn1, newdata=test.cabi, type='raw')
+error <- pred - test.cabi$registered
+cat('\nTest RMSE:', sqrt(mean(error**2)))
+```
+
+### (b)
+Repeat part (a), using only time related variables.  
+
+The best number of nodes is around 20 because any more nodes does not lower the training or test rms.  
+```{r}
+set.seed(100)
+nn1 <- nnet(registered~season+year+month+wday+hr, data=train.cabi, size=1, maxit=100, decay=.01, linout=T, trace=F)
+# Training error
+cat('Training RMSE:', sqrt(mean(residuals(nn1)^2)))
+
+# Test error
+pred <- predict(nn1, newdata=test.cabi, type='raw')
+error <- pred - test.cabi$registered
+cat('\nTest RMSE:', sqrt(mean(error**2)))
+```
+```{r}
+set.seed(100)
+nn1 <- nnet(registered~season+year+month+wday+hr, data=train.cabi, size=5, maxit=100, decay=.01, linout=T, trace=F)
+
+# Training error
+cat('Training RMSE:', sqrt(mean(residuals(nn1)^2)))
+
+# Test error
+pred <- predict(nn1, newdata=test.cabi, type='raw')
+error <- pred - test.cabi$registered
+cat('\nTest RMSE:', sqrt(mean(error**2)))
+```
+```{r}
+set.seed(100)
+nn1 <- nnet(registered~season+year+month+wday+hr, data=train.cabi, size=10, maxit=100, decay=.01, linout=T, trace=F)
+
+# Training error
+cat('Training RMSE:', sqrt(mean(residuals(nn1)^2)))
+
+# Test error
+pred <- predict(nn1, newdata=test.cabi)
+error <- pred - test.cabi$registered
+cat('\nTest RMSE:', sqrt(mean(error**2)))
+```
+```{r}
+set.seed(100)
+nn1 <- nnet(registered~season+year+month+wday+hr, data=train.cabi, size=20, maxit=100, decay=.01, linout=T, trace=F)
+
+# Training error
+cat('Training RMSE:', sqrt(mean(residuals(nn1)^2)))
+
+# Test error
+pred <- predict(nn1, newdata=test.cabi)
+error <- pred - test.cabi$registered
+cat('\nTest RMSE:', sqrt(mean(error**2)))
+```
+```{r}
+set.seed(100)
+nn1 <- nnet(registered~season+year+month+wday+hr, data=train.cabi, size=50, maxit=100, decay=.01, linout=T, trace=F)
+
+# Training error
+cat('Training RMSE:', sqrt(mean(residuals(nn1)^2)))
+
+# Test error
+pred <- predict(nn1, newdata=test.cabi)
+error <- pred - test.cabi$registered
+cat('\nTest RMSE:', sqrt(mean(error**2)))
+```
+
+### (c)
+Repeat part (a) using two time related and 2 weather related variables.  Explain your choice of variables.  
+
+The most optimal number of nodes is around 50.  As I increased the number of nodes to 60, overfitting occured.  The variables were chosen because I believed these variables to have the biggest impact on whether someone would use the bikeshare system.  I believed that the hour of day and workingday would affect if people would be using it.  If people are working, then they will need to compute.  If more people are commuting, it makes sense that more people might be using the bikeshare.  The same idea applies to hours of the day.  If it is cold, it might be reasonable to believe that less people will use bikeshare.  If it is raining, people would rather stay inside.  Another reason these variables were chosen is because it led to lower rms values.  
+```{r}
+set.seed(100)
+nn1 <- nnet(registered~temp+weather+wday+hr, data=train.cabi, size=50, maxit=500, decay=.01, linout=T, trace=F)
+
+# Training error
+cat('Training RMSE:', sqrt(mean(residuals(nn1)^2)))
+
+# Test error
+pred <- predict(nn1, newdata=test.cabi)
+error <- pred - test.cabi$registered
+cat('\nTest RMSE:', sqrt(mean(error**2)))
+```
+
+```{r}
+set.seed(100)
+nn1 <- nnet(registered~temp+weather+wday+hr, data=train.cabi, size=100, maxit=500, decay=.01, linout=T, trace=F)
+
+# Training error
+cat('Training RMSE:', sqrt(mean(residuals(nn1)^2)))
+
+# Test error
+pred <- predict(nn1, newdata=test.cabi)
+error <- pred - test.cabi$registered
+cat('\nTest RMSE:', sqrt(mean(error**2)))
+```
+
+```{r}
+set.seed(100)
+nn1 <- nnet(registered~temp+weather+wday+hr, data=train.cabi, size=70, maxit=500, decay=.01, linout=T, trace=F)
+
+# Training error
+cat('Training RMSE:', sqrt(mean(residuals(nn1)^2)))
+
+# Test error
+pred <- predict(nn1, newdata=test.cabi)
+error <- pred - test.cabi$registered
+cat('\nTest RMSE:', sqrt(mean(error**2)))
+```
+
+```{r}
+set.seed(100)
+nn1 <- nnet(registered~temp+weather+wday+hr, data=train.cabi, size=60, maxit=500, decay=.01, linout=T, trace=F)
+
+# Training error
+cat('Training RMSE:', sqrt(mean(residuals(nn1)^2)))
+
+# Test error
+pred <- predict(nn1, newdata=test.cabi)
+error <- pred - test.cabi$registered
+cat('\nTest RMSE:', sqrt(mean(error**2)))
+```
+
+
+## Problem 4
+
+What do you think are 6 useful predictors?  Use any method you want to answer this question.
+
+Using random forest to do feature selection, the top 6 most important variables are hr, workingday, yr, temp, atemp, and hum.  
+```{r include=FALSE}
+library(randomForest)
+```
+
+```{r}
+set.seed(100)
+
+rf.cabi <- randomForest(registered~season+year+month+wday+hr+temp+atemp+hum+windspeed+weather, data=train.cabi, mtry=6, ntree=100, importance=TRUE)
+
+varImpPlot(rf.cabi)
+```
+
+# Part 2 (Vegetation Cover)
+
+## Problem 5 
+Fit a logistic model to the training data in order to separate the classes.  Choose a classification threshold so that sensitivity and specificity are approximately the same on the training data.  Then report sensitivity, specificity, and overall error rate for the test data.  
+
+```{r}
+log.fit <- glm(cover~., data=covtype.train, family="binomial")
+```
+
+```{r}
+# Measures evaluated on training data
+pred <- predict(log.fit, type='response')
+con <- table(covtype.train$cover, pred > .162)
+specificity <- con[1]/(con[1] + con[3])
+sensitivity <- con[4]/(con[4] + con[2])
+cat('specificity:', specificity)
+cat('\nsensitivity:', sensitivity)
+error_rate <- (con[3]+con[2])/sum(con)
+cat('\nerror rate:', error_rate)
+```
+
+```{r}
+# Measures evaluated on test data
+pred <- predict(log.fit, data=covtype.test, type='response')
+con <- table(covtype.test$cover, pred > .162)
+specificity <- con[1]/(con[1] + con[3])
+sensitivity <- con[4]/(con[4] + con[2])
+cat('specificity:', specificity)
+cat('\nsensitivity:', sensitivity)
+error_rate <- (con[3]+con[2])/sum(con)
+cat('\nerror rate', error_rate)
+```
+
+## Problem 6
+Fit a support vector machine with radial kernels in order to separate the classes.  Tune the cost and gamma parameters so that cross validation gives the best performance on the training data.  Then assess the resulting model on the test data.  Report sensitivity, specificity, and overall error rate for training and test data.
+
+```{r include=F}
+library(e1071)
+```
+
+```{r}
+set.seed(100)
+sample_idx <- sample(10000, 2000)
+sample <- covtype.train[sample_idx,]
+tune.svm <- tune(svm, cover~., data=sample, kernel='radial', ranges=list(cost=c(1000, 100, 1, 10), gamma=c(.000001, .00001,.0001, .01, 1)))
+tune.svm$best.parameters
+```
+
+```{r}
+svm.covtype <- svm(cover~., data=covtype.train, kernel='radial', cost=10, gamma=.000001, scale=TRUE)
+```
+```{r}
+# Measures evaluated on training data
+pred <- predict(svm.covtype, newdata=covtype.train)
+con <- table(predict=pred, actual=covtype.train$cover)
+specificity <- con[1]/(con[1] + con[3])
+sensitivity <- con[4]/(con[4] + con[2])
+cat('specificity:', specificity)
+cat('\nsensitivity:', sensitivity)
+error_rate <- (con[3]+con[2])/sum(con)
+cat('\nerror rate:', error_rate)
+```
+
+```{r}
+# Measures evaluated on test data
+pred <- predict(svm.covtype, newdata=covtype.test)
+con <- table(predict=pred, actual=covtype.test$cover)
+specificity <- con[1]/(con[1] + con[3])
+sensitivity <- con[4]/(con[4] + con[2])
+cat('specificity:', specificity)
+cat('\nsensitivity:', sensitivity)
+error_rate <- (con[3]+con[2])/sum(con)
+cat('\nerror rate:', error_rate)
+```
+
+## Problem 7  
+Fit a decision tree to the training data in order to separate the two classes.  Prune the tree using cross validation and make sure that there are no redundant splits (splits that lead to leaves with the same classification).  Then estimate the classification error rate for the pruned tree from the test data.  
+
+```{r include=FALSE}
+library(tree)
+```
+
+```{r}
+set.seed(100)
+tree.oj <- tree(cover~., data=covtype.train)
+cv.oj <- cv.tree(tree.oj, FUN=prune.misclass)
+
+```
+```{r}
+plot(x=cv.oj$size, y=cv.oj$dev, type='b', xlab='tree size', ylab='cross-validate classification error')
+```
+```{r}
+prune.oj <- prune.misclass(tree.oj, best=2)
+plot(prune.oj)
+text(prune.oj, pretty=0)
+```
+```{r}
+# Measures evaluated on test data
+pred <- predict(prune.oj, newdata=covtype.test, type='class')
+con <- table(predict=pred, actual=covtype.test$cover)
+specificity <- con[1]/(con[1] + con[3])
+sensitivity <- con[4]/(con[4] + con[2])
+cat('specificity:', specificity)
+cat('\nsensitivity:', sensitivity)
+error_rate <- (con[3]+con[2])/sum(con)
+cat('\nerror rate:', error_rate)
+```
+
+## Problem 8
+Fit a random forest model to the training data in order to separate the classes.  Identify the ten most important variables and fit another random forest model, using only these variables.  Use the test data to decide which model has better performance.  
+
+THe model with the 10 most important variables had lower test error rate and higher sensitivity.  
+```{r include=F}
+library(randomForest)
+```
+
+```{r}
+rf.covtype <- randomForest(cover~., mtry=4, data=covtype.train)
+```
+
+```{r}
+imp_order <- order(-rf.covtype$importance)
+names <- rownames(rf.covtype$importance)[imp_order][1:10]
+names
+```
+```{r}
+rf.covtype.imp <- randomForest(cover~elev+wild4+soil4+soil2+h_dist_fire+h_dist_road+soil10+wild1+slope+wild3, mtry=4, data=covtype.train)
+
+```
+
+```{r}
+# Measures evaluated on test data
+pred <- predict(rf.covtype, newdata=covtype.test, type='class')
+con <- table(predict=pred, actual=covtype.test$cover)
+specificity <- con[1]/(con[1] + con[3])
+sensitivity <- con[4]/(con[4] + con[2])
+cat('first model specificity:', specificity)
+cat('\nfirst model sensitivity:', sensitivity)
+error_rate <- (con[3]+con[2])/sum(con)
+cat('\nfirst model error rate:', error_rate)
+```
+
+```{r}
+# Measures evaluated on test data
+pred <- predict(rf.covtype.imp, newdata=covtype.test, type='class')
+con <- table(predict=pred, actual=covtype.test$cover)
+specificity <- con[1]/(con[1] + con[3])
+sensitivity <- con[4]/(con[4] + con[2])
+cat('second model specificity:', specificity)
+cat('\nsecond model sensitivity:', sensitivity)
+error_rate <- (con[3]+con[2])/sum(con)
+cat('\nsecond model error rate:', error_rate)
+```
+
+# Part 3: MNIST Digit Data
+Problems 9 and 10 use the MNIST image classification data, available as mnist_all.RData in Canvas.  We use only the test data (10000 images).
+
+```{r include=FALSE}
+load("C:/Users/Norman/Desktop/Code_repo/notes/ANLY-512/week4/mnist_all.RData")
+
+```
+
+## Problem 9
+
+### (a)
+Select a random subset of 1000 digits.  Use hierarchical clustering with complete linkage on these images and visualize the dendrogram.
+
+```{r}
+set.seed(100)
+idx <- sample(10000, 1000)
+sample_x <- test$x[idx,]
+sample_y <- test$y[idx]
+```
+
+```{r}
+hc <- hclust(dist(sample_x), method='complete')
+plot(hc)
+```
+
+
+### (b)
+Does the dendrogram provide compelling evidence about the correct number of clusters? Explain your answer.
+
+No.  Because the dendrogram can be cut at any spot along the height to give different number of clusters.  
+
+### (c)
+Cut the dendrogram to generate a set of clusters that appears to be reasonable.  There should be between 5 and 15 clusters.  Then find a way to create a visual representation of each cluster.  Explain and describe your approach.
+
+The p predictors are projected into 2 discriminant components, which is then plotted below.  This is used to visualize the 10 clusters in a 2-dimensional graph.  
+```{r}
+library(cluster)
+library(fpc)
+```
+
+```{r}
+hc.cut <- cutree(hc, k=10)
+plotcluster(sample_x, hc.cut)
+```
+
+## Problem 10
+Use Principal Component Analysis on the MNIST images.
+
+### (a)
+Make a plot of the proportion of variance explained vs number of principal compnents.  Which fraction of the variance is explained by the first two principal components?  Which fraction is explained by the first 10 principal components?
+
+Juding by the plots, it looks like the first 2 principal components exlain about 12% of the total variance.  The first 10 principal components explain about 30% of the total variance.  
+```{r}
+test.x <- test$x
+vars <- apply(test.x, MARGIN=2, var)
+var.0 <- vars != 0
+test.x <- test.x[,var.0]
+```
+
+```{r}
+pr.mnist <- prcomp(test.x, scale=T)
+pr.var <- pr.mnist$sdev^2
+pve <- pr.var/sum(pr.var)
+plot(pve, xlab='Principal Component', ylab='Proportion of Variance Explained', ylim=c(0,1),
+     type='b')
+abline(v=2, col='red')
+abline(v=10)
+plot(cumsum(pve), xlab='Principal Component', ylab='Cumulative Proportion of Variance Explained', ylim=c(0,1),
+     type='b')
+abline(v=2, col='red')
+abline(v=10)
+```
+
+### (b)
+Plot the scores of the first 2 principal components of all digits against each other, color coded by the digit that is represented.  Comment on the plot.  Does it appear that digits may be separated by these scores?
+
+The figure shows that a lot of digits are overlapping, so it would be difficult to separate all digits using these scores.  
+```{r}
+scores <- data.frame(test$y, pr.mnist$x[,1:2])
+plot(x=scores$PC1, y=scores$PC2, col=factor(scores$test.y), xlab='PC1', ylab='PC2')
+```
+
+### (c)
+Find three digits which are reasonably well separated by the plot that you made in part (b).  Illustrate this with a color coded plot like the one in (b) for just these 3 digits.  Don't expect perfect separation.  
+
+```{r}
+temp <- scores[scores$test.y %in% c(1,2,4),]
+plot(x=temp$PC1, y=temp$PC2, col=factor(temp$test.y), xlab='PC1', ylab='PC2')
+```
+
+### (d)
+Find three other digits which are not well separated by the plot that you made in part (b).  Illustrate this with another color coded plot like the one in (b) for just these three digits.
+
+```{r}
+temp <- scores[scores$test.y %in% c(3,2,8),]
+plot(x=temp$PC1, y=temp$PC2, col=factor(temp$test.y), xlab='PC1', ylab='PC2')
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

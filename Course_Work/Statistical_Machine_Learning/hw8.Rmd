@@ -1,0 +1,465 @@
+---
+title: "HW8"
+author: "Norman Hong"
+date: "April 17, 2019"
+output: pdf_document
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(e1071)
+library(ISLR)
+Auto=Auto
+```
+
+# Book 3
+Here we explore the maximal margin classifier on a toy data set.
+
+## (a)
+We are given n=7 observations in p = 2 dimensions.  For each observation, there is an associated class label.  Sketch the observations.
+
+```{r}
+x1 = c(3, 2, 4, 1, 2, 4, 4)
+x2 = c(4, 2, 4, 4, 1, 3, 1)
+colors = c("red", "red", "red", "red", "blue", "blue", "blue")
+plot(x1, x2, col = colors, xlim = c(0, 6), ylim = c(0, 6))
+```
+
+## (b)
+Sketch the optimal separating hyperplane and provide the equation for this hyperplane (of the form 9.1).
+
+```{r}
+plot(x1, x2, col = colors, xlim = c(0, 6), ylim = c(0, 6))
+abline(-0.5, 1)
+```
+
+## (c)
+Describe the classification rule for the maximal margin classifier.  It should be something along the lines of "Classify to Red if greater if $\beta_{0} + \beta_{1}*X_{1} + \beta_{2}*X_{2} > 0$ and classify to Blue otherwise".  Provide the values for the beta's.  
+
+The classification rule is classify to red if $-.5 + X_{1} - X_{2} > 0$ and classify to blue otherwise.  
+
+# (d)
+On your sketch, indicate the margin for the maximal margin hyperplane.  
+
+```{r}
+plot(x1, x2, col = colors, xlim = c(0, 6), ylim = c(0, 6))
+abline(-1, 1, lty = 2)
+abline(-0.5, 1)
+abline(0, 1, lty = 2)
+```
+
+## (e)
+Indicate the support vectors for the maximal margin classifier.
+
+The support vectors are the points (2,2), (2,1), (4,4), (4,3).  
+
+## (f)
+Argue that a slight movement of the seventh observation would not affect the maximal margin hyperplane.  
+
+The reason a slight movement of the 7th observation does not affect the hyperplane is because this observation is not a support vector.  As long as we keep it away from the hyperplane, it will not affect the margin.  
+
+## (g)
+Sketch a hyperplane that is not the optimal separating hyperplane, and provide the equation for this hyperplane.
+
+```{r}
+plot(x1, x2, col = colors, xlim = c(0, 6), ylim = c(0, 6))
+abline(-0.11, 1)
+```
+
+## (h)
+Draw an additional observation on the plot so that the two classes are no longer separable by a hyperplane.
+
+```{r}
+plot(x1, x2, col = colors, xlim = c(0, 5), ylim = c(0, 5))
+points(c(4), c(1), col = c("red"))
+```
+
+# Book 7
+In this problem, you will use support vector approaches in order to predict whether a given car gets high or low gas mileage based on the Auto data set.  
+
+## (a)
+Create a binary variable that takes on a 1 for cars with gas mileage above the median, and a 0 for cars with gas mileage below the median.  
+
+```{r}
+Auto$mpg <- as.factor(ifelse(Auto$mpg > median(Auto$mpg), 1, 0))
+```
+
+
+## (b)
+Fit a support vector classifier to the data with various values of cost, in order to predict whether a car gets high or low gas mileage.  Report the cross-validation errors associated with different values of this parameter.  Comment on your results. 
+
+When cost is .01, the error is 8.94%, which is the lowest in the range of values tested.  
+```{r}
+set.seed(100)
+tune.svm <- tune(svm, mpg~., data=Auto, kernel='linear', ranges=list(cost=c(.001, .01, .1, 1, 10, 100)))
+summary(tune.svm)
+```
+
+## (c)
+Now repeat (b), this time using SVMs with radial and polynomial basis kernels, with different values of gamma and degree and cost.  Comment on your results.
+
+The lowest cross-validation error was found to be 7.92%.  This corresponded to a cost of 1 and gamma 1
+```{r}
+set.seed(100)
+tune.svm <- tune(svm, mpg~., data=Auto, kernel='radial', ranges=list(cost=c(.001, .01, .1, 1, 10, 100), gamma=c(.0001, .001, .01, 1)))
+summary(tune.svm)
+```
+
+The best parameters were found to be .1 cost, 1 gamma, degree 3.  
+```{r}
+set.seed(100)
+tune.svm <- tune(svm, mpg~., data=Auto, kernel='polynomial', ranges=list(cost=c(.001, .01, .1, 1, 10, 100), gamma=c(.0001, .001, .01, 1), degree=c(1, 2, 3)))
+summary(tune.svm)
+```
+
+## (d)
+Make some plots to back up your assertions in (b) and (c).  
+
+```{r}
+svm.Auto <- svm(mpg~., data=Auto, kernel='linear', cost=1, scale=TRUE)
+plot(svm.Auto, Auto, acceleration~weight)
+plot(svm.Auto, Auto, horsepower~year)
+plot(svm.Auto, Auto, year~weight)
+plot(svm.Auto, Auto, horsepower~displacement)
+plot(svm.Auto, Auto, cylinders~displacement)
+```
+
+```{r}
+svm.Auto <- svm(mpg~., data=Auto, kernel='polynomial', cost=.1, gamma=1, degree=3, scale=TRUE)
+plot(svm.Auto, Auto, acceleration~weight)
+plot(svm.Auto, Auto, horsepower~year)
+plot(svm.Auto, Auto, year~weight)
+plot(svm.Auto, Auto, horsepower~displacement)
+plot(svm.Auto, Auto, cylinders~displacement)
+```
+
+```{r}
+svm.Auto <- svm(mpg~., data=Auto, kernel='radial', cost=1, gamma=1, scale=TRUE)
+plot(svm.Auto, Auto, acceleration~weight)
+plot(svm.Auto, Auto, horsepower~year)
+plot(svm.Auto, Auto, year~weight)
+plot(svm.Auto, Auto, horsepower~displacement)
+plot(svm.Auto, Auto, cylinders~displacement)
+```
+
+# Book 8
+This problem involves the OJ data set which is part of the ISLR package.
+
+## (a)
+Create a training set containing a random sample of 800 observations, and a test set containing the remaining observations.
+
+```{r include=FALSE}
+OJ = OJ
+```
+
+```{r}
+trainIdx <- sample(nrow(OJ), 800, replace=FALSE)
+trainOJ <- OJ[trainIdx,]
+testOJ <- OJ[-trainIdx,]
+```
+
+## (b)
+Fit a support vector classifier to the training data using cost=.01, with Purchase as the response and the other variables as predictors.  Use the summary() function to produce summary statistics and describe the results obtained.
+
+The summary statistics show a classification svm is used with a linear kernel, so it is a svc model.  The cost is .01 and gamma is .055.  The number of support vectors is 455.  
+```{r}
+svm.oj <- svm(Purchase~., data=trainOJ, cost=.01, kernel='linear')
+summary(svm.oj)
+```
+
+## (c)
+What are the training and test error rates?
+
+Training error is 18.1%.  Test error is 14.07%
+```{r}
+# Training error rate 
+pred <- predict(svm.oj, newdata=trainOJ)
+cm <- table(pred, trainOJ$Purchase)
+cat('training error', (cm[2] + cm[3])/sum(cm))
+
+# Test error rate
+pred <- predict(svm.oj, newdata=testOJ)
+cm <- table(pred, testOJ$Purchase)
+cat('\ntest error', (cm[2] + cm[3])/sum(cm))
+
+```
+
+## (d)
+Use the tune() function to select an optimal cost.  Consider values in the range .01 to 10.  
+
+The optimal cost value is found to be 3.  
+```{r}
+set.seed(100)
+tune.oj <- tune(svm, Purchase~., data=trainOJ, kernel='linear', ranges=list(cost=c(.01, .1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)))
+summary(tune.oj)
+```
+
+
+## (e)
+Compute the training and test error rates using this new value for cost.
+
+The training error is 17.6% and the test error is 14.07%.  
+```{r}
+svm.oj <- svm(Purchase~., data=trainOJ, cost=3, kernel='linear')
+```
+
+```{r}
+# Training error rate 
+pred <- predict(svm.oj, newdata=trainOJ)
+cm <- table(pred, trainOJ$Purchase)
+cat('training error', (cm[2] + cm[3])/sum(cm))
+
+# Test error rate
+pred <- predict(svm.oj, newdata=testOJ)
+cm <- table(pred, testOJ$Purchase)
+cat('\ntest error', (cm[2] + cm[3])/sum(cm))
+
+```
+
+## (f)
+Repeat parts (b) through (e) using a support vector machine with a radial kernel.  Use the default value for gamma.
+
+The summary statistics show a classification svm is used with a radial kernel, so it is a svm model.  The cost is .01 and gamma is .055.  The number of support vectors is 641.  
+```{r}
+set.seed(100)
+svm.oj <- svm(Purchase~., data=trainOJ, cost=.01, kernel='radial')
+summary(svm.oj)
+```
+
+Training error is 39.87% and test error is 36.29%.  
+```{r}
+# Training error rate 
+pred <- predict(svm.oj, newdata=trainOJ)
+cm <- table(pred, trainOJ$Purchase)
+cat('training error', (cm[2] + cm[3])/sum(cm))
+
+# Test error rate
+pred <- predict(svm.oj, newdata=testOJ)
+cm <- table(pred, testOJ$Purchase)
+cat('\ntest error', (cm[2] + cm[3])/sum(cm))
+
+```
+
+The optimal cost value is found to be 1.  
+```{r}
+set.seed(100)
+tune.oj <- tune(svm, Purchase~., data=trainOJ, kernel='radial', ranges=list(cost=c(.01, .1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)))
+summary(tune.oj)
+```
+```{r}
+svm.oj <- svm(Purchase~., data=trainOJ, cost=1, kernel='radial')
+```
+The training error is 16.25% and the test error is 12.59%.  
+```{r}
+# Training error rate 
+pred <- predict(svm.oj, newdata=trainOJ)
+cm <- table(pred, trainOJ$Purchase)
+cat('training error', (cm[2] + cm[3])/sum(cm))
+
+# Test error rate
+pred <- predict(svm.oj, newdata=testOJ)
+cm <- table(pred, testOJ$Purchase)
+cat('\ntest error', (cm[2] + cm[3])/sum(cm))
+```
+
+## (g)
+Repeat parts (b) t hrough (e) using a support vector machine with a polynomial kernel.  Set degree=2.  
+
+The summary statistics show a classification svm is used with a polynomial kernel, so it is a svm model.  The cost is .01, degree is 2, and gamma is .055.  The number of support vectors is 644.  
+```{r}
+set.seed(100)
+svm.oj <- svm(Purchase~., data=trainOJ, cost=.01, kernel='polynomial', degree=2)
+summary(svm.oj)
+```
+
+Training error is 37.62% and test error is 35.18%.  
+```{r}
+# Training error rate 
+pred <- predict(svm.oj, newdata=trainOJ)
+cm <- table(pred, trainOJ$Purchase)
+cat('training error', (cm[2] + cm[3])/sum(cm))
+
+# Test error rate
+pred <- predict(svm.oj, newdata=testOJ)
+cm <- table(pred, testOJ$Purchase)
+cat('\ntest error', (cm[2] + cm[3])/sum(cm))
+
+```
+
+The optimal cost value is found to be 8.  
+```{r}
+set.seed(100)
+tune.oj <- tune(svm, Purchase~., data=trainOJ, kernel='polynomial', ranges=list(cost=c(.01, .1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)), degree=2)
+summary(tune.oj)
+```
+
+```{r}
+svm.oj <- svm(Purchase~., data=trainOJ, cost=8, kernel='polynomial', degree=2)
+```
+The training error is 17.00% and the test error is 15.55%.  
+```{r}
+# Training error rate 
+pred <- predict(svm.oj, newdata=trainOJ)
+cm <- table(pred, trainOJ$Purchase)
+cat('training error', (cm[2] + cm[3])/sum(cm))
+
+# Test error rate
+pred <- predict(svm.oj, newdata=testOJ)
+cm <- table(pred, testOJ$Purchase)
+cat('\ntest error', (cm[2] + cm[3])/sum(cm))
+```
+
+## (h)
+Overall, which approach seems to give the best results on this data?
+
+The radial kernel gave the lowest test error when optimized.  Therefore, this is the best svm model.  
+
+
+# Extra 63
+In this problem, we use the BreastCancer data, which comes as part of the package mlbench.  Install the package and read the description of the data.
+```{r include=FALSE}
+library(mlbench)
+library(pROC)
+data("BreastCancer")
+colnames(BreastCancer) = c('x1', 'x2', 'x3', 'x4', 'x5', 'x6', 'x7', 'x8', 'x9', 'x10', 'y')
+```
+We want to predict the class of an observation (benign or malignant).
+
+## (a)
+Fit a logistic model to the data.  Plot the ROC curve.
+
+
+```{r}
+log.bc <- suppressWarnings(glm(y~., data=BreastCancer[-1], family='binomial', maxit=1000))
+pred <- predict(log.bc, BreastCancer[-1], type='response')
+plot(roc(BreastCancer$y, pred))
+auc(roc(BreastCancer$y, pred))
+```
+
+## (b)
+Use a support vector classifier (linear kernels) to classify.  Plot the ROC curve in the plot oyu made in part a
+```{r}
+tune.bc <- tune(svm, y~., data=BreastCancer[-1], kernel='linear', ranges=list(cost=c(.001, .01, 1, 10, 100)))
+tune.bc$best.parameters
+```
+```{r}
+BreastCancer <- na.omit(BreastCancer)
+# Class 1 = malignant
+BreastCancer$y <- as.factor(ifelse(BreastCancer$y == 'malignant', 1, 0))
+```
+
+```{r}
+svm.bc <- svm(y~., data=BreastCancer[-1], kernel='linear', cost=1, decision.values=T)
+pred <- as.vector(attributes(predict(svm.bc, BreastCancer[-1], decision.values=TRUE))$decision.values)
+plot(roc(BreastCancer$y, pred))
+auc(roc(BreastCancer$y, pred))
+```
+## (c)
+Use SVMs with polynomial kernels for the same classification task, with several different degrees and otherwise using the same hyper-parameters.  Plot the ROC curves.  
+
+```{r}
+svm.bc <- svm(y~., data=BreastCancer[-1], kernel='polynomial', cost=1, degree=2, decision.values=T)
+pred <- as.vector(attributes(predict(svm.bc, BreastCancer[-1], decision.values=TRUE))$decision.values)
+plot(roc(BreastCancer$y, pred))
+```
+```{r}
+svm.bc <- svm(y~., data=BreastCancer[-1], kernel='polynomial', cost=1, degree=6, decision.values=T)
+pred <- as.vector(attributes(predict(svm.bc, BreastCancer[-1], decision.values=TRUE))$decision.values)
+plot(roc(BreastCancer$y, pred))
+```
+```{r}
+svm.bc <- svm(y~., data=BreastCancer[-1], kernel='polynomial', cost=1, degree=10, decision.values=T)
+pred <- as.vector(attributes(predict(svm.bc, BreastCancer[-1], decision.values=TRUE))$decision.values)
+plot(roc(BreastCancer$y, pred))
+```
+
+## (d)
+Compare the results of a), b), and c).  Are the support vector classifier and logistic regression comparable?  Is SVM better?  Does this appear to depend on the degree?
+
+The support vector classifier and logistic regression are basically identical in performance, but the logistic regression has an auc of 1 and svc has auc  of .9966.  SVM performs better with higher degrees.  SVM with degree of 2 performs worst than  logistic regression and svc.  
+
+# Extra 66
+This problem uses the MNIST image classification data, available as mnist_all.RData that were used earlier.  We want to distinguish  between 3 and 8.  Extract the relevant training and test data and place them in suitable data frames.  Remove all variables (pixels) with 0 variance from the training data and remove these also from the test data.  
+
+```{r include=FALSE}
+library(randomForest)
+load("C:/Users/Norman/Desktop/Code_repo/notes/ANLY-512/week4/mnist_all.RData")
+```
+
+```{r}
+train.x <- train$x[(train$y == 3) | (train$y == 8),]
+train.y <- train$y[train$y == 3 | train$y == 8]
+train.y <- as.factor(as.numeric(train.y == 3)) # Class 1 = 3; class 0 = 8
+
+test.x <- test$x[(test$y == 3) | (test$y == 8),]
+test.y <- test$y[test$y == 3 | test$y == 8]
+test.y <- as.factor(as.numeric(test.y == 3))
+
+vars <- apply(train.x, MARGIN=2, var)
+var.0 <- vars != 0
+train.x <- train.x[,var.0]
+test.x <- test.x[,var.0]
+
+train.df <- data.frame(train.x, y=train.y)
+test.df <- data.frame(test.x, y=test.y)
+```
+
+## (a)
+Fit a random forest model to the training data.  Experiment with hyperparameters until you get a very good classification on the training data.  Then evaluate the model on the test data and make a confusion matrix.  
+
+The training misclassification error rate is 0%.  The test misclassification rate is 1.91%.  
+```{r}
+set.seed(100)
+forest.mnist <- randomForest(y~., data=train.df, mtry=5, ntree=200)
+```
+```{r}
+# Training misclassification error rate
+pred <- predict(forest.mnist, newdata=train.df, type='class')
+cm <- table(pred, train.df$y)
+cm
+(cm[2] + cm[3])/sum(cm)
+```
+```{r}
+# Test misclassification error rate
+pred <- predict(forest.mnist, newdata=test.df, type='class')
+cm <- table(pred, test.df$y)
+cm
+(cm[2] + cm[3])/sum(cm)
+```
+
+## (b)
+Can you get a similar or better performance on the training data if you use an SVM classifier with kernel='radial'? Experiment with hyperparameters.  Do not report all trials, only the best result.  Then evaluate the model on the test data and make a confusion matrix.  
+
+I was able to get a svm model to perform better than the random forest model.  The training error is roughly 0% and the test error is 1.3%, which is lower than the random forest model.  
+```{r}
+set.seed(100)
+svm.mnist <- svm(y~., data=train.df, kernel='radial', cost=10)
+```
+
+```{r}
+# Training misclassification error rate
+pred <- predict(svm.mnist, newdata=train.df, type='class')
+cm <- table(pred, train.df$y)
+cm
+(cm[2] + cm[3])/sum(cm)
+```
+
+```{r}
+# Test misclassification error rate
+pred <- predict(svm.mnist, newdata=test.df, type='class')
+cm <- table(pred, test.df$y)
+cm
+(cm[2] + cm[3])/sum(cm)
+```
+
+
+## (c)
+Compare the results of a) and b).  Is there a clear difference in performance?  Do any of these methods tend to overfit?  DO there runtimes differ substantially?
+
+There is no clear difference in performance, however, the svm model performs slightly better.  Both models have roughly perfect classification test error.  These methods overfit slightly because the test error is not lower than the training error and the training error is 0.  However, the test error is still very low.  The SVM model took a substantially longer time than the random forest model.  For this reason, the random forest model is preferred.  
+
+
+
+
+
+
