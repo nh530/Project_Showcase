@@ -1,0 +1,14 @@
+igram = LOAD 'i-bigrams/googlebooks-eng-us-all-2gram-20120701-i*' USING PigStorage('\t') AS (ngram:chararray, year:int, occurrences:int, books:int);
+temp = GROUP igram BY ngram;
+tot_occ = FOREACH temp GENERATE group, SUM(igram.occurrences) AS Occurrence;
+tot_books = FOREACH temp GENERATE group, SUM(igram.books) AS Books;
+occur_books = FOREACH temp GENERATE group, ((float)SUM(igram.occurrences)/(float)SUM(igram.books)) AS Occurrences_Per_Book;
+first_year = FOREACH temp GENERATE group, MIN(igram.year) AS First_Appearance;
+last_year = FOREACH temp GENERATE group, MAX(igram.year) AS Last_Appearance;
+appear_years = FOREACH temp GENERATE group, COUNT(igram.year) AS Years_With_Appearances;
+agg = JOIN tot_occ BY group, tot_books BY group, occur_books BY group, first_year BY group, last_year BY group, appear_years BY group;
+aggre = FOREACH agg GENERATE tot_occ::group AS bigram, tot_occ::Occurrence AS Occurrence, tot_books::Books AS Books, occur_books::Occurrences_Per_Book AS Occurrences_Per_Book, first_year::First_Appearance AS First_Appearance, last_year::Last_Appearance AS Last_Appearance, appear_years::Years_With_Appearances AS Years_With_Appearances;
+filt_year = FILTER aggre BY (First_Appearance == 1950)  AND (Years_With_Appearances == 60) AND (Last_Appearance == 2009);
+final = LIMIT filt_year 50;
+Ready = ORDER final BY Occurrences_Per_Book DESC;
+STORE Ready INTO 'Pig-results' USING PigStorage(',');

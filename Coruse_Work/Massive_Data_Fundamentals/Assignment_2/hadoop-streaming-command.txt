@@ -1,0 +1,6 @@
+hadoop jar /usr/lib/hadoop/hadoop-streaming.jar \
+-D stream.non.zero.exit.is.failure=false \
+-D mapreduce.job.reduces=0 \
+-input s3://bigdatateaching/quazyilx/quazyilx2.txt \
+-output out \
+-mapper "grep 'fnard:-1 fnok:-1 cark:-1 gnuck:-1'"
