@@ -1,7 +1,5 @@
 # Kernelized Decision Trees and Random Forest
-Research project focusing on combining decision trees with kernel methods. 
-
-![Forests](./images/rf.jpg)
+![Forests](/images/rf.jpg)
 
 ## Author
 * [Norman Hong](https://www.linkedin.com/in/norman-hong-b4075210a/)
@@ -9,6 +7,8 @@ Research project focusing on combining decision trees with kernel methods.
 ## Table of contents
 * [Introduction](#Introduction)
 * [Setting Up Environment](#Setting-Up-Environment)
+* [How to Run?](#How-to-Run?)
+* [Code Style](#Code-Style)
 * [References](#References)
 
 ## Introduction
@@ -39,7 +39,7 @@ $ python Decision_Tree_Kernel_leaves.py
 ```
 
 ## Code style
-python Pep-8 standard 
+Python Pep-8 standard 
 
 ## References
 * [Salzberg, S. “A Nearest Hyperrectangle Learning Method.” Machine Learning, vol. 6, 251–276 (1991).
