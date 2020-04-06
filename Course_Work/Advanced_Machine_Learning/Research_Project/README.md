@@ -1,5 +1,5 @@
 # Kernelized Decision Trees and Random Forest
-<img src="https://github.com/nh530/Project_Showcase/blob/master/Course_Work/Advanced_Machine_Learning/Research_Project/Images/forest.jpg" width="500" class="center">
+<img src="https://github.com/nh530/Project_Showcase/blob/master/Course_Work/Advanced_Machine_Learning/Research_Project/Images/forest.jpg" width="500" align="center">
 
 ## Author
 * [Norman Hong](https://www.linkedin.com/in/norman-hong-b4075210a/)
