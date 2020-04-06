@@ -1,5 +1,5 @@
 # Kernelized Decision Trees and Random Forest
-![Forests](/images/rf.jpg)
+![Forests](/Course_Work/Advanced_Machine_Learning/Research_Project/images/rf.jpg)
 
 ## Author
 * [Norman Hong](https://www.linkedin.com/in/norman-hong-b4075210a/)
@@ -35,7 +35,7 @@ $ python3 -m pip install -r requirements.txt
 
 ## How to Run?
 ``` bash
-$ python Decision_Tree_Kernel_leaves.py
+$ python3 Decision_Tree_Kernel_leaves.py
 ```
 
 ## Code style
