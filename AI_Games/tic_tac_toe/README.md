@@ -1,6 +1,6 @@
 # Machine Learning for Tic-Tac-Toe
 <p align='center'>
-<img src="https://github.com/nh530/Project_Showcase/blob/master/Course_Work/AI_Games/tic_tac_toe/images/ttt.png" width="500">
+<img src="https://github.com/nh530/Project_Showcase/blob/master/AI_Games/tic_tac_toe/images/ttt.png" width="500">
 </p>
 
 ## Author
