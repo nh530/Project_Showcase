@@ -10,6 +10,7 @@
 ## Table of contents
 
 * [Introduction](#Introduction)
+* [Results](#Results)
 * [Setting Up Environment](#Setting-Up-Environment)
 * [How to Run?](#How-to-Run?)
 * [TODO](#To-do)
