@@ -1,6 +1,6 @@
 # Kernelized Decision Trees and Random Forest
 <p align='center'>
-<img src="https://github.com/nh530/Project_Showcase/blob/master/Course_Work/Advanced_Machine_Learning/Research_Project/Images/forest.jpg" width="500">
+<img src="https://github.com/nh530/Project_Showcase/blob/master/Research_Project/Images/forest.jpg" width="500">
 </p>
 
 ## Author
@@ -31,7 +31,7 @@ Kernel regression trees have been defined by \cite{Torgo_1999} as a decision tre
 Modern implementations of random forests and decision trees use max voting in leaves for classification tasks and averaging in  leaves for regression tasks. When the leaves are impure, there could be more information to be gained in each leaf. Kernel regressions are a popular non-parametric technique for estimating non-linear relationships between random variables. The proposed method, called kernel decision trees, integrates decision trees with kernel weighted averaging at the leaves such that you don’t have to save all n training points. 
 
 <p align='center'>
-<img src="https://github.com/nh530/Project_Showcase/blob/master/Course_Work/Advanced_Machine_Learning/Research_Project/Images/dec_tree_kernels.png" width="500">
+<img src="https://github.com/nh530/Project_Showcase/blob/master/Research_Project/Images/dec_tree_kernels.png" width="500">
 </p>
 
 Terminal nodes of a decision tree can be interpreted as hyperrectangle subspaces of the feature space where any two points belonging to the same hyperrectangle are given the same value. A way to generalize the kernel computation is to compute the distance of a point to the edges. This is in contrast to computing all the distances of a given point to all the other points in a given subspace. As a result, only the edges of a hyperrectangle, which are also the decision boundaries in a tree, need to be saved, and the resulting prediction is some kernelized weighted average. 
