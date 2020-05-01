@@ -26,6 +26,7 @@
 ## Results
 
 * Linear regression does not perform better than alpha-beta pruning. It can work somewhat well depending on the board features used, but at best, it only learns to draw the game.
+* Logistic regression does not blow up the weights like the linear regression model. Same performance as linear regression model. 
 
 ## Setting Up Environment
 
