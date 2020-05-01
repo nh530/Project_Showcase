@@ -10,6 +10,7 @@
 ## Table of contents
 
 * [Introduction](#Introduction)
+* [Results](#Results)
 * [Setting Up Environment](#Setting-Up-Environment)
 * [How to Run?](#How-to-Run?)
 * [TODO](#To-do)
@@ -21,6 +22,10 @@
 * tic_tac_toe_emulator.py contains the script necessary to run a Tic-Tac-Toe game. 
 
 * linear_regression_ai.py is a machine learning implementation that decides on the next optimal move, given the current Tic-Tac-Toe board, by using linear regression. A set of features is derived from the board, and the target variable is a number ranging from -100 to 100 where 100 is the value if win, and -100 is the value if lost. 
+
+## Results
+
+* Linear regression does not perform better than alpha-beta pruning. It can work somewhat well depending on the board features used, but at best, it only learns to draw the game.
 
 ## Setting Up Environment
 

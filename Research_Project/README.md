@@ -1,11 +1,12 @@
 # Kernelized Decision Trees and Random Forest
 <p align='center'>
-<img src="https://github.com/nh530/Project_Showcase/blob/master/Course_Work/Advanced_Machine_Learning/Research_Project/Images/forest.jpg" width="500">
+<img src="https://github.com/nh530/Project_Showcase/blob/master/Research_Project/Images/forest.jpg" width="500">
 </p>
 
 ## Author
 
 * [Norman Hong](https://www.linkedin.com/in/norman-hong-b4075210a/)
+* This work was part of a larger project in partnership with [Jack Hart](https://www.linkedin.com/in/jack-hrt/)
 
 ## Table of contents
 
@@ -30,12 +31,17 @@ Kernel regression trees have been defined by \cite{Torgo_1999} as a decision tre
 Modern implementations of random forests and decision trees use max voting in leaves for classification tasks and averaging in  leaves for regression tasks. When the leaves are impure, there could be more information to be gained in each leaf. Kernel regressions are a popular non-parametric technique for estimating non-linear relationships between random variables. The proposed method, called kernel decision trees, integrates decision trees with kernel weighted averaging at the leaves such that you don’t have to save all n training points. 
 
 <p align='center'>
-<img src="https://github.com/nh530/Project_Showcase/blob/master/Course_Work/Advanced_Machine_Learning/Research_Project/Images/dec_tree_kernels.jpg" width="500">
+<img src="https://github.com/nh530/Project_Showcase/blob/master/Research_Project/Images/dec_tree_kernels.png" width="500">
 </p>
 
 Terminal nodes of a decision tree can be interpreted as hyperrectangle subspaces of the feature space where any two points belonging to the same hyperrectangle are given the same value. A way to generalize the kernel computation is to compute the distance of a point to the edges. This is in contrast to computing all the distances of a given point to all the other points in a given subspace. As a result, only the edges of a hyperrectangle, which are also the decision boundaries in a tree, need to be saved, and the resulting prediction is some kernelized weighted average. 
 
 An issue with this method is storing decision boundaries and then determine which points on the boundary to use during the kernel computation. Another issue is that the results of the smoothing will be strongly correlated with the structure of the decision tree. Intuitively, this would minimize the effects of using a weighted smoothing. From this point of view, consider saving a subset of the training data by selecting the points that are closest to the boundary edges. Given a training dataset with vectors of d dimensions, a boundary point is defined to be any point where the values in one of its vector components is c away from a cutoff value in the same dimension. Therefore, the proposed method will first create a decision tree based on the CART algorithm. Secondly, it will iterate through all training instances 1 time, run the instance vector through the generated decision tree, calculate if the vector component is at least c away from the cutoff value at each node. Lastly, all boundary points are saved and used for kernel computation during predictions. 
+
+## Conclusion
+
+The goal of this work was to fix some of the limitations of decision trees in the hopes of introducing an algorithm that is suitable for large datasets, while also not sacrificing performance. The presented algorithm was tested on small real world datasets
+that demonstrated a clear advantage. Kernel decision trees outperform a decision tree across all of the tested datasets, although only slightly, and was hypothesized that it was due to the simple and small nature of these datasets. As a result, this is a clear improvement and expands upon the work done by Torgo in the Kernel Regression Trees paper. 
 
 ## Setting Up Environment
 
