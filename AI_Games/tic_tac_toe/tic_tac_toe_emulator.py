@@ -191,7 +191,7 @@ class TicTacToe(object):
         :return: Returns the next move.
         """
         copy = self.get_board_copy()
-        if self.ai is None: # if did not pass in a trained agent.
+        if self.ai is None:  # if did not pass in a trained agent.
             # First, check if computer can win in the next move
             for i in range(1, 10):
                 if self.is_space_free(i):  # If space is free
@@ -285,7 +285,7 @@ def play_again():
 
 def main():
     weights = linear_regression_ai.train(10000)
-    agent = linear_regression_ai.Player(playerSymbol=None, playerTargetFunctionWeightVector=weights)
+    agent = linear_regression_ai.Player(playerTargetFunctionWeightVector=weights)
     while True:
         engine = TicTacToe(ai=agent)
         engine.run()

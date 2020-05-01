@@ -17,23 +17,23 @@ Design choices for Implementation
 ---------------------------------
 Target function, V, is defined to be some function that describes changes to the target variable.
 Target function is the function that maps board to the target variable. Target variable is assumed to be some real
-number that describes the outcome of the event.  Target variable is 100 if player wins, -100 if player loses, 0 if draw,
+number that describes the probability of win.  Target variable is 100 if player wins, -100 if player loses, 0 if draw,
 and Y = V(X) = W*X if neither of the previous 2 conditions are satisfied. In other words, the relationship between
-board features and the target is assumed to be linear.
+board features and the target is assumed to be sigmoid function.
 -Approximate Target Function (V): Maps board -> R
 -Let W denote the vector of weights
 -Let X denote the vector of features that are extracted from a given board b_t, where b_t denotes the board
 at turn t.
--Since we assume the underlying model is linear, we use mean squared error loss function.
+- Since we assume the target distribution is bernoulli, we use binary cross entropy loss function.
 -At each training iteration, the target variables are generated from previous learned weights.
 -Each component in X captures a different property of the Tic-Tac-Toe board. For instance, $X_1$ is the number of
 player1 letters in a row with 2 empty spots, $X_3$ is the number of player1 letters in a row with 1 empty spot, and
 $X_5$ is the number of player1 letters in a row with no empty spots. Likewise, $X_2, X_4, X_6$ is the same but for
 player2 letters.
 -The algorithm should learn to place more weight to the features that indicate we're closer to a win.
-
-TODO: Training the agent on 10,000 games create a sufficient AI that will always draw the player. However, if the player
-TODO: gives the agent a free win, the agent will not take the free win.
+-I think logistic regression is the best we can do, besides using neural networks, because can't really use random
+forest or bagging or boosting. We need the target to be interpreted as a probability, which lets the agent select
+best move that leads to highest probability of winning.
 """
 import numpy as np
 import random
@@ -117,7 +117,7 @@ class Player(object):
         :params: playerSymbol2: "X" or "O" representing the other player.
         :returns: feature_vector:
         """
-        w1, w2, w3, w4, w5, w6, w7, w8 = 0, 0, 0, 0, 0, 0, 0, 0  # Initializing feature vector.
+        w1, w2, w3, w4, w5, w6, w7, w8, w9, w10 = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0  # Initializing feature vector.
         # if 1 of Player-1's Symbol in a row with two open spots, above or below.
         if (((board[1] == playerSymbol1) and (board[4] == board[7] == ' ')) or
                 ((board[7] == playerSymbol1) and (board[4] == board[1] == ' ')) or
@@ -201,7 +201,20 @@ class Player(object):
             # if 3 of player-2's symbols in a row,
             if board[i] == board[i+1] == board[i+2] == playerSymbol2:
                 w6 = w6 + 1
-
+        # if 3 of player-1's symbols in a diagonal
+        if (board[1] == board[5] == board[9] == playerSymbol1) or (board[3] == board[5] == board[7] == playerSymbol1):
+            w9 = w9 + 1
+        # if 3 of player-1 symbols in a column
+        if (board[1] == board[4] == board[7] == playerSymbol1) or (board[3] == board[6] == board[9] == playerSymbol1) \
+                or (board[2] == board[5] == board[8] == playerSymbol1):
+            w9 = w9 + 1
+        # if 3 of player-2 symbols in a column.
+        if (board[1] == board[4] == board[7] == playerSymbol2) or (board[3] == board[6] == board[9] == playerSymbol2) \
+                or (board[2] == board[5] == board[8] == playerSymbol2):
+            w10 = w10 + 1
+        # if 3 of Player-2's Symbol in a diagonal
+        if (board[1] == board[5] == board[9] == playerSymbol2) or (board[3] == board[5] == board[7] == playerSymbol2):
+            w10 = w10 + 1
         # if 2 of Player-1's Symbol in a diagonal
         if (((board[1] == ' ') and (board[5] == board[7] == playerSymbol1)) or
                 ((board[7] == ' ') and (board[5] == board[1] == playerSymbol1)) or
@@ -221,7 +234,7 @@ class Player(object):
                 ((board[5] == ' ') and (board[9] == board[3] == playerSymbol2))):
             w8 = w8 + 1
         # Added 1 for bias term.
-        feature_vector = [1, w1, w2, w3, w4, w5, w6, w7, w8]
+        feature_vector = [1, w1, w2, w3, w4, w5, w6, w7, w8, w9, w10]
         return feature_vector
 
     def boardPrint(self, board):
@@ -240,14 +253,14 @@ class Player(object):
 
     def calculateNonFinalBoardScore(self, weight_vector, feature_vector):
         """
-        Returns score/Value of a given non final board state. This is calculated as a linear regression.
+        Returns score/Value of a given non final board state. This is calculated as a logistic regression.
         :params: weight_vector: vector of weights.
         :params: feature_vector: vector of features.
         :return: boardScore: returns the target variable.
         """
         weight_vector = np.array(weight_vector).reshape((len(weight_vector), 1))
         feature_vector = np.array(feature_vector).reshape((len(feature_vector), 1))
-        boardScore = np.dot(weight_vector.T, feature_vector)  # Doing linear regression.
+        boardScore = 1 / (1 + np.exp(-1 * np.dot(weight_vector.T, feature_vector)))
         return boardScore[0][0]  # Indexing to return a single value instead of np.array()
 
     def chooseMove(self, board, playerSymbol1, playerSymbol2):
@@ -355,7 +368,7 @@ class Critic:
         :params: playerSymbol2: "X" or "O" representing the other player.
         :returns: feature_vector:
         """
-        w1, w2, w3, w4, w5, w6, w7, w8 = 0, 0, 0, 0, 0, 0, 0, 0  # Initializing feature vector.
+        w1, w2, w3, w4, w5, w6, w7, w8, w9, w10 = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0  # Initializing feature vector.
         # if 1 of Player-1's Symbol in a row with two open spots, above or below.
         if (((board[1] == playerSymbol1) and (board[4] == board[7] == ' ')) or
                 ((board[7] == playerSymbol1) and (board[4] == board[1] == ' ')) or
@@ -439,7 +452,20 @@ class Critic:
             # if 3 of player-2's symbols in a row,
             if board[i] == board[i+1] == board[i+2] == playerSymbol2:
                 w6 = w6 + 1
-
+        # if 3 of player-1's symbols in a diagonal
+        if (board[1] == board[5] == board[9] == playerSymbol1) or (board[3] == board[5] == board[7] == playerSymbol1):
+            w9 = w9 + 1
+        # if 3 of player-1 symbols in a column
+        if (board[1] == board[4] == board[7] == playerSymbol1) or (board[3] == board[6] == board[9] == playerSymbol1) \
+                or (board[2] == board[5] == board[8] == playerSymbol1):
+            w9 = w9 + 1
+        # if 3 of player-2 symbols in a column.
+        if (board[1] == board[4] == board[7] == playerSymbol2) or (board[3] == board[6] == board[9] == playerSymbol2) \
+                or (board[2] == board[5] == board[8] == playerSymbol2):
+            w10 = w10 + 1
+        # if 3 of Player-2's Symbol in a diagonal
+        if (board[1] == board[5] == board[9] == playerSymbol2) or (board[3] == board[5] == board[7] == playerSymbol2):
+            w10 = w10 + 1
         # if 2 of Player-1's Symbol in a diagonal
         if (((board[1] == ' ') and (board[5] == board[7] == playerSymbol1)) or
                 ((board[7] == ' ') and (board[5] == board[1] == playerSymbol1)) or
@@ -459,27 +485,27 @@ class Critic:
                 ((board[5] == ' ') and (board[9] == board[3] == playerSymbol2))):
             w8 = w8 + 1
         # Added 1 for bias term.
-        feature_vector = [1, w1, w2, w3, w4, w5, w6, w7, w8]
+        feature_vector = [1, w1, w2, w3, w4, w5, w6, w7, w8, w9, w10]
         return feature_vector
 
     def calculateNonFinalBoardScore(self, weight_vector, feature_vector):
         """
-        Returns score/Value of a given non final board state. This is calculated as a linear regression.
+        Returns score/Value of a given non final board state. This is calculated as a logistic regression.
         :params: weight_vector: vector of weights.
         :params: feature_vector: vector of features.
         :return: boardScore: returns the target variable.
         """
         weight_vector = np.array(weight_vector).reshape((len(weight_vector), 1))
         feature_vector = np.array(feature_vector).reshape((len(feature_vector), 1))
-        boardScore = np.dot(weight_vector.T, feature_vector)  # Doing linear regression.
-        return boardScore[0][0]  # Indexing to returning a single value instead of np.array().
+        boardScore = 1 / (1 + np.exp(-1 * np.dot(weight_vector.T, feature_vector)))
+        return boardScore[0][0]  # Indexing to return a single value instead of np.array()
 
     def calculateFinalBoardScore(self, board, playerSymbol1, playerSymbol2):
         """
         Returns score/Value of a given final board state
         """
         # If game ends in a draw
-        score = 0
+        score = .5
         # If player-1 (i.e self) wins
         if ((board[7] == board[8] == board[9] == playerSymbol1) or  # across the bottom
                 (board[4] == board[5] == board[6] == playerSymbol1) or  # across the middle
@@ -489,7 +515,7 @@ class Critic:
                 (board[9] == board[6] == board[3] == playerSymbol1) or  # down the right side
                 (board[7] == board[5] == board[3] == playerSymbol1) or  # diagonal
                 (board[9] == board[5] == board[1] == playerSymbol1)):  # diagonal
-            score = 100
+            score = 1
         # If player-2 (i.e opponent) wins
         elif((board[7] == board[8] == board[9] == playerSymbol2) or  # across the bottom
                 (board[4] == board[5] == board[6] == playerSymbol2) or  # across the middle
@@ -499,7 +525,7 @@ class Critic:
                 (board[9] == board[6] == board[3] == playerSymbol2) or  # down the right side
                 (board[7] == board[5] == board[3] == playerSymbol2) or  # diagonal
                 (board[9] == board[5] == board[1] == playerSymbol2)):  # diagonal
-            score = -100
+            score = 0
         return score
 
     def generateTrainingSamples(self, weight_vector, playerSymbol1, playerSymbol2):
@@ -544,11 +570,11 @@ class Critic:
             self.arrayPrint(board)
         finalScore = self.calculateFinalBoardScore(self.gameHistory[-1], playerSymbol1, playerSymbol2)
         # If game is a win
-        if finalScore == 100:
+        if finalScore == 1:
             print(playerSymbol1 + " wins")
             gameStatusCount[0] = gameStatusCount[0] + 1
         # If game is a loss
-        elif finalScore == -100:
+        elif finalScore == 0:
             print(playerSymbol2 + " wins")
             gameStatusCount[1] = gameStatusCount[1] + 1
         # Else, game is a draw.
@@ -561,23 +587,28 @@ class Critic:
 class Generalizer:
     """
     It takes Training examples from Critic & suggests/improves the Hypothesis function (Approximate Target Function).
-    This object basically computed the updated weights for a linear model using gradient descent.
+    This object basically computed the updated weights for a logistic model using gradient descent.
     """
     def __init__(self, trainingExamples):
         self.trainingExamples = trainingExamples
 
     def calculateNonFinalBoardScore(self, weight_vector, feature_vector):
-        """ Returns score/Value of a given non final board state """
+        """
+        Returns score/Value of a given non final board state. This is calculated as a logistic regression.
+        :params: weight_vector: vector of weights.
+        :params: feature_vector: vector of features.
+        :return: boardScore: returns the target variable.
+        """
         weight_vector = np.array(weight_vector).reshape((len(weight_vector), 1))
         feature_vector = np.array(feature_vector).reshape((len(feature_vector), 1))
-        boardScore = np.dot(weight_vector.T, feature_vector)
-        return boardScore[0][0]
+        boardScore = 1 / (1 + np.exp(-1 * np.dot(weight_vector.T, feature_vector)))
+        return boardScore[0][0]  # Indexing to return a single value instead of np.array()
 
-    def lmsWeightUpdate(self, weight_vector, alpha=0.1):
+    def lmsWeightUpdate(self, weight_vector, alpha=0.3):
         """
         Returns new Weight vector updated y learning from Training examples via LMS (Least Mean Squares) training rule.
         trainingExamples are generated using current weight_vector.
-        The implementation is equivalent to gradient descent with a mse loss function and linear model.
+        The implementation is equivalent to gradient descent with binary cross entropy and logistic model.
         The same weight_vector passed here is passed in Critic.generateTrainingSamples().
         Reference Deep learning by Goodfellow, Bengio, and Courville.
         """
@@ -588,8 +619,9 @@ class Generalizer:
             vHatBoardState = self.calculateNonFinalBoardScore(weight_vector, trainingExample[0])
             # This is the weight plus the a learning term multiplied by a term derived from the derivative.
             # Don't actually need full derivative term, only the direction.
-            # Reminder your suppose to go opposite of where the gradient is pointing.
-            weight_vector = weight_vector + (alpha * (vTrainBoardState - vHatBoardState) * np.array(trainingExample[0]))
+            # Reminder, your suppose to go opposite of where the gradient is pointing.
+            weight_vector = weight_vector + (alpha * (vHatBoardState - vTrainBoardState) * np.array(trainingExample[0]))
+
         return weight_vector
 
 
@@ -601,8 +633,8 @@ def train(numTrainingSamples=10):
     # Initializing variables.
     trainingGameCount = 0
     playerSymbols = ('X', 'O')  # index 1 is player1, index 2 is player2.
-    playersTargetFunctionWeightVectors = [np.array([.5, .5, .5, .5, .5, .5, .5, .5, .5]),
-                                          np.array([.5, .5, .5, .5, .5, .5, .5, .5, .5])]
+    playersTargetFunctionWeightVectors = [np.array([.5, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5]),
+                                          np.array([.5, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5])]
     gameStatusCount = [0, 0, 0]  # Keeps track of number of wins, loses, and draws respectively.
 
     while trainingGameCount < numTrainingSamples:
