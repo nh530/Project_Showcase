@@ -25,8 +25,6 @@
 
 * logistic_regression_ai.py assumes a linear dependence between the log odds and the board features. The same set of features were used in linear_regression_ai.py and the class variables were changed to 0 and 1.
 
-* Random forest or boosting wouldn't make much sense because we need to construct a probability of winning given a move. 
-
 ## Results
 
 * Linear regression does not perform better than alpha-beta pruning. It can work somewhat well depending on the board features used, but at best, it only learns to draw the game.
@@ -64,3 +62,4 @@ $ python3 Decision_Tree_Kernel_leaves.py
 ## To do
 1. Neural Networks
 2. Reinforcement learning
+3. Random Forests
