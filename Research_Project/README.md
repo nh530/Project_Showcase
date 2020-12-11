@@ -20,7 +20,7 @@
 
 ## Introduction
 
-Modern implementations of decision trees and random forests, like ID4 or CART, uses max voting or mean value functions in the leafs of each tree. This research project explores the potential of using kernel methods, similar to the implementation of kernel regressions, in the leaves. In essence, the idea is that instead of giving every training observation equal weight, kernels are used to give weight based on similarity. Decision trees are methods that have low bias and overfit to the training data. As such, a way to reduce the bias is to use kernel weights at the leaves, which acts as a smoothing mechanism. Therefore, reduce overfitting and giving the user another tool to control the bias-variance tradeoff that is common among machine learning algorithms.
+Modern implementations of decision trees and random forests, like ID4 or CART, uses max voting or mean value functions in the leafs of each tree. This research project explores the potential of using kernel methods, similar to the implementation of kernel regressions, in the leaves. In essence, the idea is that instead of giving every training observation equal weight, kernels are used to give weight based on similarity. Decision trees are methods that have low bias, high variance, and overfit to the training data. As such, a way to reduce the variance, and slightly increase bias, is to use kernel weights at the leaves, which acts as a smoothing mechanism. Therefore, reduce overfitting and giving the user another tool to control the bias-variance tradeoff that is common among machine learning algorithms.
 
 ## Related Works
 
